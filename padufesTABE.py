@@ -18,7 +18,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ### DATA LOADING AND PREPROCESSING ###
 
-path = 'PADUFES'
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+path = os.path.join(project_dir, 'Data/PADUFES')
 images = f'{path}/imgs_part_1'
 metadata = pd.read_csv(f'{path}/metadata.csv')
 
@@ -91,7 +92,7 @@ model_encoder, model_classifier, model_aux = train_model(
     model_encoder, model_classifier, model_aux,
     pad_train_dataloader, pad_val_dataloader,
     1, optimizer, optimizer_aux, optimizer_confusion,
-    criterion, criterion_aux, alpha, GRL
+    criterion, criterion_aux, device, alpha, GRL
 )
 
 model = nn.Sequential(

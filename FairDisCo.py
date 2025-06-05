@@ -199,6 +199,8 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
 
     os.makedirs(timestamped_folder, exist_ok=True)
 
+    model.to(device)
+
     if optimizer is None:
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     if scheduler is None:
@@ -208,7 +210,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
             nn.CrossEntropyLoss(),
             Confusion_Loss(),
             nn.CrossEntropyLoss(),
-            Supervised_Contrastive_Loss()
+            Supervised_Contrastive_Loss(device=device)
         ]
 
     best_loss = float('inf')

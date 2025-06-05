@@ -17,7 +17,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ### DATA LOADING AND PREPROCESSING ###
 
-path = 'PADUFES'
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+path = os.path.join(project_dir, 'Data/PADUFES')
 images = f'{path}/imgs_part_1'
 metadata = pd.read_csv(f'{path}/metadata.csv')
 

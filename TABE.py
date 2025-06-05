@@ -126,7 +126,7 @@ def train_epoch_TABE(model_encoder, model_classifier, model_aux, loader, optimiz
         optimizer_aux.zero_grad()
         optimizer_confusion.zero_grad()
 
-        data = batch['image'] 
+        data = batch['image']
         target = batch['diagnosis']
         target_aux = batch['fst'].long()
 
@@ -233,7 +233,7 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
 
 
 def train_model(model_encoder, model_classifier, model_aux, train_loader, val_loader, num_epochs, optimizer, 
-                optimizer_aux,optimizer_confusion, criterion, criterion_aux, alpha=0.1, GRL=False, run_folder=None):
+                optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, alpha=0.1, GRL=False, run_folder=None):
     
     # Saving the model checkpoints
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -250,6 +250,9 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
 
     os.makedirs(timestamped_folder, exist_ok=True)
     
+    model_encoder.to(device)
+    model_classifier.to(device)
+    model_aux.to(device)
 
     best_val_loss = float('inf')
     best_model_state = None

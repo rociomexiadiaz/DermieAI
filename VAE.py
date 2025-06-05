@@ -70,7 +70,7 @@ class VAEmodel(nn.Module):
         gen = torch.Generator(device='cpu')
 
         std = torch.exp(0.5 * logvar)
-        eps = torch.randn(std.shape, generator=gen, dtype=std.dtype)
+        eps = torch.randn(std.shape, generator=gen, dtype=std.dtype).to(mu.device)
         return mu + eps * std
     
     def forward(self, x):

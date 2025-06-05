@@ -16,8 +16,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 ### LOAD AND CLEAN METADATA ###
-
-path = 'dermie_images'
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+path = os.path.join(project_dir, 'Data/dermie_images')
 metadata = clean_metadata(pd.read_csv(f'{path}/Labelled_images_for_training_700_15_disease.csv'))
 images = f'{path}/Labelled_images_for_training_700'
 

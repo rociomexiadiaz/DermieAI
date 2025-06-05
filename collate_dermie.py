@@ -2,12 +2,15 @@ import pandas as pd
 from difflib import SequenceMatcher
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def collate_metadata(metadata_files = ['Master Lesion Sheet - Sheet1.csv', 'More data - Sheet1.csv']):
     all_metadata = []
 
     for file in metadata_files:
-        pd_metadata = pd.read_csv(f'dermie_images/{file}')
+        project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(project_dir, 'Data/dermie_images')
+        pd_metadata = pd.read_csv(f'{path}/{file}')
 
         if file == 'More data - Sheet1.csv':
             pd_metadata.rename(columns={'Diagnosis (most confident)':'Diagnosis'}, inplace=True)
