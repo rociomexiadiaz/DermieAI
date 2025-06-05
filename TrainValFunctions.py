@@ -1,0 +1,101 @@
+import torch
+import datetime
+import os   
+
+def train_epoch(model, train_loader, optimizer, criterion, device):
+
+    model.train()
+
+    epoch_loss = 0
+
+    for batch in train_loader:
+        images = batch['image'].to(device)
+        labels = batch['diagnosis'].to(device) 
+        
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        
+        epoch_loss += loss.item()
+
+    epoch_loss /= len(train_loader)
+
+    return epoch_loss
+
+
+def validate_epoch(model, val_loader, criterion, device):
+
+    model.eval()
+
+    epoch_loss = 0
+
+    with torch.no_grad():
+        for batch in val_loader:
+            images = batch['image'].to(device)
+            labels = batch['diagnosis'].to(device) 
+            
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            
+            epoch_loss += loss.item()
+
+    epoch_loss /= len(val_loader)
+
+    return epoch_loss
+
+def train_model(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=5, scheduler=None, run_folder=None):
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.makedirs("checkpoints", exist_ok=True)
+
+    if run_folder is None:
+        timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
+        
+    else:        
+        named_run_folder = os.path.join("checkpoints", run_folder)
+        os.makedirs(named_run_folder, exist_ok=True)
+        timestamped_folder = os.path.join(named_run_folder, f'run_{timestamp}')
+
+    os.makedirs(timestamped_folder, exist_ok=True)
+
+    model.to(device)
+
+    train_losses = []
+    val_losses = []
+    best_val_loss = float('inf')
+    best_model_state = None
+
+    for epoch in range(num_epochs):
+        train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
+        train_losses.append(train_loss)
+        val_loss = validate_epoch(model, val_loader, criterion, device)
+        val_losses.append(val_loss)
+
+        print(f'Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+
+        if scheduler:
+            scheduler.step(metrics=val_loss)
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+
+            chkp_pth = os.path.join(timestamped_folder, f"best_model_epoch_{epoch+1}.pt")
+            best_model_state = {
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            }
+            torch.save(best_model_state, chkp_pth)
+
+    final_chkp_pth = os.path.join(timestamped_folder, "final_model.pt")
+    torch.save(best_model_state, final_chkp_pth)
+
+    print(f"Final model saved: {final_chkp_pth}")
+
+    model.load_state_dict(best_model_state['model_state_dict'])
+    
+    return model
+
+
+
