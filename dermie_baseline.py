@@ -8,6 +8,7 @@ from metricsFunctions import *
 from TrainValFunctions import *
 from TestFunction import *
 import matplotlib.pyplot as plt
+from xai import *
 
 ### SEEDS AND DEVICE ###
 
@@ -129,8 +130,15 @@ metrics = test_model(
 
 summarise_metrics(metrics, conditions_mapping)
 
+### MODEL EXPLANATION ###
 
-### Check individual dataset distributions
+model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
+model_gradCAM.eval()
+heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+
+
+### DATASET VISUALISATION ###
 
 def visualise(dataset: DermieDataset):
 

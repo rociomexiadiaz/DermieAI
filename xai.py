@@ -4,69 +4,57 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
-
-
-class resNet(nn.Module):
-    def __init__(self, model):
-        super(resNet, self).__init__()
-
-        self.res = model
-       
-        self.seq = nn.Sequential(
-            self.res.conv1,
-            self.res.bn1,
-            self.res.relu,
-            self.res.maxpool,
-            self.res.layer1,
-            self.res.layer2,
-            self.res.layer3,
-            self.res.layer4[:-1],
-            self.res.layer4[-1].conv1,
-            self.res.layer4[-1].bn1,
-            self.res.layer4[-1].conv2,
-            self.res.layer4[-1].bn2,
-            self.res.layer4[-1].conv3
-        )
-
-        self.bottom = nn.Sequential(
-            self.res.layer4[-1].bn3,
-            self.res.layer4[-1].relu,
-            self.res.avgpool
-        )
-
-        self.fc = self.res.fc
-
+import torch.functional as F
+    
+class UniversalGrad(nn.Module):
+    def __init__(self, model, target_layer_name):
+        super(UniversalGrad, self).__init__()
+        
+        self.model = model
         self.gradients = None
+        self.activations = None
+        self.modules = dict(model.named_modules())
+        self.target_layer = self.modules[target_layer_name]
+        self.forward_hook = self.target_layer.register_forward_hook(self._save_activation)
+        self.backward_hook = self.target_layer.register_full_backward_hook(self._save_gradient)
 
-
-    # hook for the gradients of the activations
+            
+    def _save_activation(self, module, input, output):
+        self.activations = output.detach()
+    
+    def _save_gradient(self, module, grad_input, grad_output):
+        if grad_output[0] is not None:
+            self.gradients = grad_output[0].detach()
+    
     def activations_hook(self, grad):
         self.gradients = grad
-        
-    def forward(self, x):
-        x = self.seq(x)
-        
-        # register the hook
-        h = x.register_hook(self.activations_hook)
-        
-        # apply the remaining pooling
-        x = self.bottom(x)
-        x = x.view((1, -1))
-        x = self.fc(x)
-        return x
     
-    # method for the gradient extraction
+    def forward(self, x):
+        self.gradients = None
+        self.activations = None
+        output = self.model(x)
+        return output
+    
     def get_activations_gradient(self):
         return self.gradients
     
-    # method for the activation exctraction
     def get_activations(self, x):
-        return self.seq(x)
+        self.gradients = None
+        self.activations = None
+        
+        with torch.no_grad():
+            _ = self.model(x)
+        
+        return self.activations
     
+    def __del__(self):
+        if hasattr(self, 'forward_hook'):
+            self.forward_hook.remove()
+        if hasattr(self, 'backward_hook'):
+            self.backward_hook.remove()
 
 
-def gradCAM(model, loader):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def gradCAM(model, loader, device):
 
     heatmaps = []
     images = []
@@ -78,7 +66,6 @@ def gradCAM(model, loader):
     for image, label in zip(batch['image'], batch['diagnosis']):
         
         img = image.to(device).requires_grad_()
-
         labl = label.to(device).argmax(dim=0).item()
         real_labels.append(labl)
 
@@ -94,29 +81,18 @@ def gradCAM(model, loader):
         model.zero_grad()
         pred[0, class_idx].backward()
 
-        # pull the gradients out of the model
+        # 3. Pull gradients
         gradients = model.get_activations_gradient()
-
-        # pool the gradients across the channels
         pooled_gradients = torch.mean(gradients, dim=[0, 2, 3])
 
-        # get the activations of the last convolutional layer
+        # 4. Get activations
         activations = model.get_activations(img).detach()
-
-        # weight the channels by corresponding gradients
         for i in range(activations.shape[1]):
             activations[:, i, :, :] *= pooled_gradients[i]
 
-        # average the channels of the activations
         heatmap = torch.mean(activations, dim=1).squeeze()
-
-        # relu on top of the heatmap
-        # expression (2) in https://arxiv.org/pdf/1610.02391.pdf
         heatmap = np.maximum(heatmap, 0)
-
-        # normalize the heatmap
         heatmap /= torch.max(heatmap)
-
         heatmaps.append(heatmap)
 
         # Convert image tensor to numpy
@@ -128,58 +104,55 @@ def gradCAM(model, loader):
     return heatmaps, images, predicted_labels, real_labels
 
 
-
-
-def overlay_heatmap_on_image(img, heatmap, alpha=0.4, colormap='jet'):
+def overlay_heatmap(img, heatmap, alpha=0.4, colormap='jet'):
 
     if img.max() > 1.0:
-        img = img / 255.0  # Convert to [0, 1]
+        img = img / 255.0  
 
     cmap = matplotlib.colormaps[colormap]
-    colored_heatmap = cmap(heatmap)[:, :, :3]  # Drop alpha channel
+    colored_heatmap = cmap(heatmap)[:, :, :3]  
     
     overlay = (1 - alpha) * img + alpha * colored_heatmap
     overlay = np.clip(overlay, 0, 1)
 
     return overlay
 
-def visualize_gradcams_with_colorbars(images, heatmaps, preds, labels, conditions):
-    cols= 3
-
-    n_images = len(images)
-    rows = (n_images + cols - 1) // cols  
+def visualize_gradcams_with_colorbars(images, heatmaps, preds, labels, conditions, max_rows=4):
+    
+    cols = 3
+    max_images = max_rows * cols
+    n_images = min(len(images), max_images)
+    rows = (n_images + cols - 1) // cols
 
     fig, axes = plt.subplots(rows, cols, figsize=(cols * 4, rows * 4))
-    
-    if n_images == 1:
-        axes = [axes]
-    elif rows == 1:
-        axes = axes.flatten()
-    elif cols == 1:
+
+    if isinstance(axes, np.ndarray):
         axes = axes.flatten()
     else:
-        axes = axes.flatten()
+        axes = [axes]
 
     for idx, (img, heatmap, pred, label) in enumerate(zip(images, heatmaps, preds, labels)):
-
-        heatmap = heatmap.squeeze()  # Remove any singleton dimensions
-        if heatmap.ndim > 2:
-            heatmap = heatmap[:, :, 0]  # Take first channel if multiple exist
         
-        heatmap = heatmap.detach().cpu().numpy()  # Safely convert to numpy
+        if idx >= max_images:
+            break
+
+        heatmap = heatmap.squeeze()  
+        if heatmap.ndim > 2:
+            heatmap = heatmap[:, :, 0]  
+        
+        heatmap = heatmap.detach().cpu().numpy()  
         heatmap = heatmap - np.min(heatmap)
         heatmap = heatmap / np.max(heatmap + 1e-8)
 
         from skimage.transform import resize
         heatmap = resize(heatmap, (224, 224), anti_aliasing=True)
        
-        overlay = overlay_heatmap_on_image(img, heatmap)
+        overlay = overlay_heatmap(img, heatmap)
 
         axes[idx].imshow(overlay)
         axes[idx].set_title(f'Condition: {conditions[label]}, Predicted: {conditions[pred]}')
         axes[idx].axis('off')
     
-    # Hide empty subplots
     for idx in range(n_images, len(axes)):
         axes[idx].axis('off')
     
