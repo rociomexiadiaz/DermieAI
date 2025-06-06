@@ -8,6 +8,7 @@ import torch
 from FairDisCo import *
 from TestFunction import *
 from metricsFunctions import *
+from xai import *
 
 ### SETTING SEED AND DEVICE ###
 
@@ -79,3 +80,12 @@ metrics = test_model(model, pad_test_dataloader, device, top_k_accuracy(3), top_
 )   
 
 summarise_metrics(metrics, conditions_mapping)
+
+
+### MODEL EXPLANATION ###
+
+model_gradCAM = UniversalGrad(model, '0.layer4.1.conv2')
+model_gradCAM.eval()
+heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+

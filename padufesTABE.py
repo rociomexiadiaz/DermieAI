@@ -9,6 +9,7 @@ from torch import nn
 from TABE import *
 from TestFunction import *
 from metricsFunctions import *
+from xai import *
 
 ### SETTING SEEDS AND DEVICE ###
 
@@ -85,14 +86,28 @@ criterion_aux = nn.CrossEntropyLoss()
 alpha = 0.5  
 GRL = True  
 
+model = nn.Sequential(
+    model_encoder,
+    model_classifier,
+    model_classifier.activation)
 
 ### MODEL TRAINING AND TESTING ###
 
 model_encoder, model_classifier, model_aux = train_model(
-    model_encoder, model_classifier, model_aux,
-    pad_train_dataloader, pad_val_dataloader,
-    1, optimizer, optimizer_aux, optimizer_confusion,
-    criterion, criterion_aux, device, alpha, GRL
+    model_encoder=model_encoder, 
+    model_classifier=model_classifier, 
+    model_aux=model_aux,
+    train_loader=pad_train_dataloader, 
+    val_loader=pad_val_dataloader,
+    num_epochs=1, 
+    optimizer=optimizer, 
+    optimizer_aux=optimizer_aux, 
+    optimizer_confusion=optimizer_confusion,
+    criterion=criterion, 
+    criterion_aux=criterion_aux, 
+    device=device, 
+    alpha=alpha, 
+    GRL=GRL
 )
 
 model = nn.Sequential(
@@ -103,3 +118,12 @@ model = nn.Sequential(
 metrics = test_model(model, pad_test_dataloader, device, top_k_accuracy(3), top_k_sensitivity(3), stratified_k_accuracy(3), stratified_k_sensitivity(3), missclassified_samples())   
 
 summarise_metrics(metrics, conditions_mapping)
+
+
+### MODEL EXPLANATION ###
+
+model_gradCAM = UniversalGrad(model, '0.enet.layer4.2.conv3')
+model_gradCAM.eval()
+heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+
