@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
-import torch.functional as F
-    
+from skimage.transform import resize
+
 class UniversalGrad(nn.Module):
     def __init__(self, model, target_layer_name):
         super(UniversalGrad, self).__init__()
@@ -90,13 +90,13 @@ def gradCAM(model, loader, device):
         for i in range(activations.shape[1]):
             activations[:, i, :, :] *= pooled_gradients[i]
 
-        heatmap = torch.mean(activations, dim=1).squeeze()
+        heatmap = torch.mean(activations, dim=1).squeeze().cpu()
         heatmap = np.maximum(heatmap, 0)
         heatmap /= torch.max(heatmap)
         heatmaps.append(heatmap)
 
         # Convert image tensor to numpy
-        img_np = img.detach().squeeze().permute(1, 2, 0).numpy()
+        img_np = img.detach().squeeze().permute(1, 2, 0).cpu().numpy()
         img_np = np.clip(img_np, 0, 1)  # If normalized
 
         images.append(img_np)
@@ -144,7 +144,6 @@ def visualize_gradcams_with_colorbars(images, heatmaps, preds, labels, condition
         heatmap = heatmap - np.min(heatmap)
         heatmap = heatmap / np.max(heatmap + 1e-8)
 
-        from skimage.transform import resize
         heatmap = resize(heatmap, (224, 224), anti_aliasing=True)
        
         overlay = overlay_heatmap(img, heatmap)
