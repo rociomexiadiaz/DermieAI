@@ -25,10 +25,10 @@ class Diagnose:
 
         self.condition_dictionary = {
             'acne': ['acne'],
-            'actinic Keratosis':  ["actinic keratosis", "ak", "actinic keratoses"],
+            'actinic keratosis':  ["actinic keratosis", "ak", "actinic keratoses"],
             'BCC': ['bcc', 'basal cell carcinoma'],
-            'contact cermatitis': ['dermatitis', 'contact dermatitis'],
-            'cutaneous cupus': ["cutaneous lupus", "discoid lupus", "subacute cutaneous lupus"],
+            'contact dermatitis': ['dermatitis', 'contact dermatitis'],
+            'cutaneous lupus': ["cutaneous lupus", "discoid lupus", "subacute cutaneous lupus"],
             'cutaneous sarcoidosis': ["cutaneous sarcoidosis", "sarcoidosis"],
             'cyst': ['cyst', 'cysts'],
             'eczema': ['eczema'],
