@@ -157,3 +157,5 @@ def visualize_gradcams_with_colorbars(images, heatmaps, preds, labels, condition
     
     plt.tight_layout()
     plt.show()
+
+    return fig

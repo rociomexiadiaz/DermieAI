@@ -111,41 +111,63 @@ class missclassified_samples():
 
     
 def display_top3_sensitivity(sensitivities, conditions_mapping):
+    output = []
+
     for condition in sensitivities.keys():
         try:
             print(f"Condition: {conditions_mapping[int(condition)]}, Top-3 Sensitivity: {sensitivities[int(condition)]:.2f}%")
+            output.append(f"Condition: {conditions_mapping[int(condition)]}, Top-3 Sensitivity: {sensitivities[int(condition)]:.2f}%")
         except KeyError:
             print('Error: Condition not found in mapping:')
 
     average_sensitivity = sum(sensitivities.values()) / len(sensitivities)
     print(f"Average Top-3 Sensitivity: {average_sensitivity:.2f}%")
+    output.append(f"Average Top-3 Sensitivity: {average_sensitivity:.2f}%")
+
+    return output
 
 def display_stratified_sensitivity(sensitivities, conditions_mapping):
+    output = []
     for skintone, condition_sensitivities in sensitivities.items():
         print(f"Skin Tone: {skintone}")
+        output.append(f"Skin Tone: {skintone}")
         for condition, sensitivity in condition_sensitivities.items():
             try:
                 print(f"  Condition: {conditions_mapping[int(condition)]}, Top-3 Sensitivity: {sensitivity:.2f}%")
+                output.append(f"  Condition: {conditions_mapping[int(condition)]}, Top-3 Sensitivity: {sensitivity:.2f}%")
             except KeyError:
                 print('  Error: Condition not found in mapping:')
         print()
 
+    return output
+
 def display_stratified_accuracy(accuracy):
+    output = []
     for skintone, acc in accuracy.items():
         print(f"Skin Tone: {skintone}, Top-3 Accuracy: {acc:.2f}%")
+        output.append(f"Skin Tone: {skintone}, Top-3 Accuracy: {acc:.2f}%")
+    return output
+
+        
 
 def summarise_metrics(metrics, conditions_mapping):
 
+    output_lines = []
+
     if 'top_3_acc' in metrics:
         print(f"Top-3 Accuracy: {metrics['top_3_acc']:.2f}%")
+        output_lines.append(f"Top-3 Accuracy: {metrics['top_3_acc']:.2f}%")
     if 'top_3_sens' in metrics:
-        display_top3_sensitivity(metrics['top_3_sens'], conditions_mapping)
+        top3_sens = display_top3_sensitivity(metrics['top_3_sens'], conditions_mapping)
+        output_lines.extend(top3_sens)
     if 'strat_top_3_acc' in metrics:
-        display_stratified_accuracy(metrics['strat_top_3_acc'])
+        strat_top3_acc = display_stratified_accuracy(metrics['strat_top_3_acc'])
+        output_lines.extend(strat_top3_acc)
     if 'strat_top_3_sens' in metrics:
-        display_stratified_sensitivity(metrics['strat_top_3_sens'], conditions_mapping)
+        strat_top3_sens = display_stratified_sensitivity(metrics['strat_top_3_sens'], conditions_mapping)
+        output_lines.extend(strat_top3_sens)
     if 'missclassified_samples' in metrics:
         print(f"Number of missclassified samples: {len(metrics['missclassified_samples'])}")
+        output_lines.append(f"Number of missclassified samples: {len(metrics['missclassified_samples'])}")
 
-
-   
+    return output_lines

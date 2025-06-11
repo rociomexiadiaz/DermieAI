@@ -10,10 +10,28 @@ from TestFunction import *
 import matplotlib.pyplot as plt
 from xai import *
 
-### SEEDS AND DEVICE ###
+### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+os.makedirs('Logs', exist_ok=True)
+log_file = f"Logs/dermie_experiment_{experiment_timestamp}.txt"
+
+def save_experiment_log(data, file_path=log_file):
+    with open(file_path, 'w', encoding='utf-8') as f:
+        for key, value in data.items():
+            f.write(f"{key}: {value}\n")
+
+def save_plot_and_return_path(fig, filename_base):
+    filename = f"Logs/{filename_base}_{experiment_timestamp}.png"
+    fig.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    return filename
+
+experiment_data = {}
+experiment_data['Python Filename'] = os.path.basename(__file__)
 
 
 ### LOAD AND CLEAN METADATA ###
@@ -35,10 +53,12 @@ metadata = metadata[metadata['Diagnosis'].isin(['eczema', 'acne', 'psoriasis', '
 
 ### CREATE DATASETS ###
 
+stratification_strategy = 'Diagnosis'  # 'stratify_col' -> Ensure all conditions and skin tones are in both train and test
+
 metadata_train, metadata_test = train_test_split(
     metadata,
     test_size=0.3,
-    stratify=metadata['Diagnosis'],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both train and test
+    stratify=metadata[stratification_strategy],  
     random_state=42
 )
 
@@ -70,17 +90,20 @@ Dermie_test = DermieDataset(metadata_test, images, transform=transformations_val
 
 conditions_mapping = Dermie_train.diagnose_encoder.categories_[0]
 
-train_sampler = BalanceSampler(Dermie_train, choice='diagnostic')
+balancer_strategy = 'diagnostic' # or 'both'
+batch_size = 64
+
+train_sampler = BalanceSampler(Dermie_train, choice=balancer_strategy)
 
 pad_train_dataloader = torch.utils.data.DataLoader(
     Dermie_train,
-    batch_size=64,
+    batch_size=batch_size,
     num_workers=0,
     sampler=train_sampler
 )
 pad_val_dataloader = torch.utils.data.DataLoader(
     Dermie_val,
-    batch_size=64,
+    batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
@@ -110,14 +133,19 @@ for name, param in model.named_parameters():
 
 ### MODEL TRAINING AND TESTING ###
 
+lr = 0.001
+num_epochs = 5
+optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+criterion = torch.nn.BCEWithLogitsLoss()
+
 model = train_model(
     model,
     pad_train_dataloader,
     pad_val_dataloader,
-    optimizer=torch.optim.Adam(model.parameters(), lr=0.001),
-    criterion=torch.nn.BCEWithLogitsLoss(),
+    optimizer=optimizer,
+    criterion=criterion,
     device=device,
-    num_epochs=5,
+    num_epochs=num_epochs,
     run_folder='Dermie_runs'
 )
 
@@ -128,15 +156,17 @@ metrics = test_model(
     top_k_accuracy(3), top_k_sensitivity(3), stratified_k_accuracy(3), stratified_k_sensitivity(3), missclassified_samples()
 )   
 
-summarise_metrics(metrics, conditions_mapping)
+summary = summarise_metrics(metrics, conditions_mapping)
+experiment_data['Metrics'] = '\n'.join(summary)
 
 ### MODEL EXPLANATION ###
 
 model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
 model_gradCAM.eval()
 heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
-visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
-
+fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
+experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 ### DATASET VISUALISATION ###
 
@@ -186,6 +216,26 @@ def visualise(dataset: DermieDataset):
     plt.tight_layout()
     plt.show()
 
-visualise(Dermie_train)
-visualise(Dermie_test)
+    return fig
+
+fig_train = visualise(Dermie_train)
+fig_test = visualise(Dermie_test)
+
+fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
+fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
+
+
+### SAVE RESULTS ###
+
+experiment_data['Dataset Path'] = path 
+experiment_data['Stratification Technique'] = stratification_strategy 
+experiment_data['Sampler Choice'] = balancer_strategy 
+experiment_data['Batch Size'] = batch_size 
+experiment_data['Model'] = 'ResNet50' 
+experiment_data['Learning Rate'] = lr 
+experiment_data['Optimizer'] = 'Adam' 
+experiment_data['Criterion'] = 'BCEWithLogitsLoss' 
+experiment_data['Train Dataset Visualisation'] = fig_train_path 
+experiment_data['Test Dataset Visualisation'] = fig_test_path 
+save_experiment_log(experiment_data, file_path=log_file)
 
