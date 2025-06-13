@@ -70,7 +70,7 @@ class AuxiliaryHead(nn.Module):
         self.activation = nn.Softmax(dim=1)  
 
     def forward(self, x_aux):
-        x_aux = self.layer(x_aux).squeeze()
+        x_aux = self.layer(x_aux)
         px_aux = self.activation(x_aux)
         return x_aux, px_aux
 
@@ -128,7 +128,7 @@ def train_epoch_TABE(model_encoder, model_classifier, model_aux, loader, optimiz
 
         data = batch['image']
         target = batch['diagnosis']
-        target_aux = batch['fst'].long()
+        target_aux = (batch['fst'].long() -1).view(-1) # moves FST labels from 1-6 to 0-5
 
         data, target, target_aux = data.to(device), target.to(device), target_aux.to(device)
         
@@ -166,6 +166,7 @@ def train_epoch_TABE(model_encoder, model_classifier, model_aux, loader, optimiz
         logits_aux, _ = model_aux(feat_out)
 
         loss_aux = criterion_aux(logits_aux, target_aux)
+        
 
         loss_aux.backward()
         optimizer.step()
@@ -194,7 +195,7 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
         for batch in tqdm.tqdm(loader):
             data = batch['image']
             target = batch['diagnosis']
-            target_aux = batch['fst'].long()
+            target_aux = (batch['fst'].long() -1).view(-1)
 
             data, target, target_aux = data.to(device), target.to(device), target_aux.to(device)
 
@@ -213,8 +214,6 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
             loss = loss_main + loss_conf  
 
             eval_loss.append(loss.detach().cpu().numpy())
-
-            feat_out = model_encoder(data)  
 
             if GRL:
                 feat_out = grad_reverse(feat_out)

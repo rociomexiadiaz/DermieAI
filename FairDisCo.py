@@ -16,9 +16,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ### MODEL + LOSSES ###
 
 class Network(torch.nn.Module):
-    def __init__(self, output_size=[6,6], weights='IMAGENET1K_V1'): 
+    def __init__(self, output_size=[1,6], weights='IMAGENET1K_V1'): 
         '''
-        output_size: list first is skin type, second is skin conditipon 
+        output_size: list first is skin type, second is condition
         '''
         super(Network, self).__init__()
         bottle_neck = 256
@@ -126,17 +126,17 @@ def train_epoch(model, dataloader, device,
     for batch in dataloader:
         inputs = batch['image'].to(device)
       
-        label_c, label_t = batch['diagnosis'], (batch['fst']-1).long()
+        label_c, label_t = batch['diagnosis'], (batch['fst']-1)
         label_c, label_t = torch.from_numpy(np.asarray(label_c)).to(device), torch.from_numpy(np.asarray(label_t)).to(device)
-      
+
         optimizer.zero_grad()
 
         output = model(inputs)
 
-        loss0 = criterion[0](output[0], label_c) 
-        loss1 = criterion[1](output[1], label_t)  # branch 2 confusion loss
-        loss2 = criterion[2](output[2], label_t)  # branch 2 ce loss
-        loss3 = criterion[3](output[3], label_c)  # supervised contrastive loss
+        loss0 = criterion[0](output[0], label_t) 
+        loss1 = criterion[1](output[1], label_c)  # branch 2 confusion loss
+        loss2 = criterion[2](output[2], label_c)  # branch 2 ce loss
+        loss3 = criterion[3](output[3], label_t)  # supervised contrastive loss
         loss = loss0+loss1*alpha+loss2+loss3*beta
 
         loss.backward()
@@ -161,15 +161,15 @@ def val_epoch(model, dataloader, device, criterion, alpha=1.0, beta=0.8):
     with torch.no_grad():
         for batch in dataloader:
             inputs = batch['image'].to(device)
-            label_c, label_t = batch['diagnosis'], (batch['fst']-1).long() 
+            label_c, label_t = batch['diagnosis'], (batch['fst']-1)
             label_c, label_t = torch.from_numpy(np.asarray(label_c)).to(device), torch.from_numpy(np.asarray(label_t)).to(device)
 
             output = model(inputs)
 
-            loss0 = criterion[0](output[0], label_c) 
-            loss1 = criterion[1](output[1], label_t)  # branch 2 confusion loss
-            loss2 = criterion[2](output[2], label_t)  # branch 2 ce loss
-            loss3 = criterion[3](output[3], label_c)  # supervised contrastive loss
+            loss0 = criterion[0](output[0], label_t) 
+            loss1 = criterion[1](output[1], label_c)  # branch 2 confusion loss
+            loss2 = criterion[2](output[2], label_c)  # branch 2 ce loss
+            loss3 = criterion[3](output[3], label_t)  # supervised contrastive loss
             loss = loss0+loss1+loss2+loss3
 
             running_loss += loss.item() * inputs.size(0)
@@ -207,7 +207,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
     if criterion is None:
         criterion = [
-            nn.CrossEntropyLoss(),
+            nn.MSELoss(),
             Confusion_Loss(),
             nn.CrossEntropyLoss(),
             Supervised_Contrastive_Loss(device=device)
