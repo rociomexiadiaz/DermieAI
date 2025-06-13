@@ -133,7 +133,8 @@ def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=1.0, c3=0.1):
     - KL divergence loss
     """
     # Classification loss
-    classification_loss = F.cross_entropy(y_pred, y_true)
+    class_criterion = nn.BCEWithLogitsLoss()
+    classification_loss = class_criterion(y_pred, y_true)
     
     # Reconstruction loss
     reconstruction_loss = F.mse_loss(x_recon, x, reduction='mean')
