@@ -26,7 +26,11 @@ def clean_metadata(pd_metadata: pd.DataFrame, images_dir):
     pd_metadata.drop_duplicates(subset=['Image Name'], inplace=True)
 
     # Remove Inexistent Images
-    base_name_to_file = {os.path.splitext(f)[0]: f for f in os.listdir(images_dir)}
+    base_name_to_file = {
+        os.path.splitext(f)[0]: f
+        for f in os.listdir(images_dir)
+        if not f.lower().endswith('.avif')
+    }
     pd_metadata = pd_metadata[pd_metadata['Image Name'].isin(base_name_to_file.keys())]
     pd_metadata['Image Name'] = pd_metadata['Image Name'].map(base_name_to_file)
 

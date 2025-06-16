@@ -121,6 +121,13 @@ class AdaptiveResampler:
             weights[i] = weight
             
         # Normalize weights
+        weights = np.nan_to_num(weights, nan=0.0, posinf=0.0, neginf=0.0)
+        weights = np.clip(weights, 0, None)  # eliminate any negative weights
+
+        if np.sum(weights) == 0:
+            print("Warning: all weights are zero. Using uniform weights.")
+            weights = np.ones_like(weights)
+
         weights = weights / np.sum(weights) * len(weights)
         return weights
     

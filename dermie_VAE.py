@@ -179,7 +179,7 @@ resampler = AdaptiveResampler()
 
 ### MODEL TRAINING AND TESTING ###
 
-model = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, None, resampler, device=device, num_epochs=1)
+model = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, None, resampler, device=device, num_epochs=10)
 
 model = nn.Sequential(
     model.encoder,
