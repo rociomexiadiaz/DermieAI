@@ -37,9 +37,9 @@ experiment_data['Python Filename'] = os.path.basename(__file__)
 ### LOAD AND CLEAN METADATA ###
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-path = os.path.join(project_dir, r'Data\dermie_data')
-images = rf'{path}\master_data_june_7_2025'
-metadata = clean_metadata(pd.read_csv(rf'{path}\master_data_june_7_2025.csv'), images)
+path = os.path.join(project_dir, r'Data/dermie_data')
+images = rf'{path}/master_data_june_7_2025'
+metadata = clean_metadata(pd.read_csv(rf'{path}/master_data_june_7_2025.csv'), images)
 
 
 ### VISUALISE DATA ###
@@ -171,13 +171,13 @@ pad_test_dataloader = torch.utils.data.DataLoader(
 
 ### MODEL LOADING ###
 
-model = models.resnet50(weights='IMAGENET1K_V1')
+model = models.resnet152(weights='IMAGENET1K_V1')
 
 num_classes = 8
 model.fc = torch.nn.Sequential(
     torch.nn.Linear(model.fc.in_features, num_classes),
-    #torch.nn.Softmax(dim=1)  nn.CrossEntropyLoss already applies softmax
 )
+
 
 for name, param in model.named_parameters():
     #param.requires_grad = True
@@ -216,12 +216,12 @@ experiment_data['Metrics'] = '\n'.join(summary)
 
 ### MODEL EXPLANATION ###
 
-model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
-model_gradCAM.eval()
-heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
-fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
-grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
-experiment_data['GradCAM Plot Path'] = grad_cam_path
+#model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
+#model_gradCAM.eval()
+#heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+#fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+#grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
+#experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 
 ### SAVE RESULTS ###

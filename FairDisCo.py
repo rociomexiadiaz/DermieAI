@@ -23,7 +23,7 @@ class Network(torch.nn.Module):
         super(Network, self).__init__()
         bottle_neck = 256
 
-        self.feature_extractor = models.resnet18(weights=weights)
+        self.feature_extractor = models.resnet152(weights=weights)
         num_ftrs = self.feature_extractor.fc.in_features
         self.feature_extractor.fc = nn.Linear(num_ftrs, bottle_neck)
         # for contrastive loss

@@ -37,9 +37,9 @@ experiment_data['Python Filename'] = os.path.basename(__file__)
 ### LOAD AND CLEAN METADATA ###
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-path = os.path.join(project_dir, r'Data\dermie_data')
-images = rf'{path}\master_data_june_7_2025'
-metadata = clean_metadata(pd.read_csv(rf'{path}\master_data_june_7_2025.csv'), images)
+path = os.path.join(project_dir, r'Data/dermie_data')
+images = rf'{path}/master_data_june_7_2025'
+metadata = clean_metadata(pd.read_csv(rf'{path}/master_data_june_7_2025.csv'), images)
 
 
 ### VISUALISE DATA ###
@@ -171,7 +171,7 @@ pad_test_dataloader = torch.utils.data.DataLoader(
 
 ### MODEL LOADING ###
 
-model_encoder = FeatureExtractor()
+model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
 model_classifier = ClassificationHead(out_dim=8, in_ch=model_encoder.in_ch)
 model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 

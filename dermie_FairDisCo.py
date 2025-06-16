@@ -37,9 +37,9 @@ experiment_data['Python Filename'] = os.path.basename(__file__)
 ### LOAD AND CLEAN METADATA ###
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-path = os.path.join(project_dir, r'Data\dermie_data')
-images = rf'{path}\master_data_june_7_2025'
-metadata = clean_metadata(pd.read_csv(rf'{path}\master_data_june_7_2025.csv'), images)
+path = os.path.join(project_dir, r'Data/dermie_data')
+images = rf'{path}/master_data_june_7_2025'
+metadata = clean_metadata(pd.read_csv(rf'{path}/master_data_june_7_2025.csv'), images)
 
 
 ### VISUALISE DATA ###
@@ -172,7 +172,7 @@ pad_test_dataloader = torch.utils.data.DataLoader(
 ### MODEL LOADING ###
 
 model = Network(output_size=[1,8])
-model = train_model(model, pad_train_dataloader, pad_val_dataloader, device, num_epochs=5)
+model = train_model(model, pad_train_dataloader, pad_val_dataloader, device, num_epochs=10)
 
 model = nn.Sequential(
     model.feature_extractor,
@@ -187,7 +187,7 @@ experiment_data['Metrics'] = '\n'.join(summary)
 
 ### MODEL EXPLANATION ###
 
-model_gradCAM = UniversalGrad(model, '0.layer4.1.conv2')
+model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')
 model_gradCAM.eval()
 heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
 fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
