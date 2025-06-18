@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import torchvision.transforms as transforms
 import torch
 from torchvision import models
-from metricsFunctions import *
+from metricsFunctions2 import *
 from TrainValFunctions import *
 from TestFunction import *
 import matplotlib.pyplot as plt
@@ -189,7 +189,7 @@ for name, param in model.named_parameters():
 ### MODEL TRAINING AND TESTING ###
 
 lr = 0.001
-num_epochs = 5
+num_epochs = 10
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 criterion = torch.nn.BCEWithLogitsLoss()
 
@@ -208,32 +208,29 @@ metrics = test_model(
     model,
     pad_test_dataloader,
     device,
-    top_k_accuracy(3), top_k_sensitivity(3), stratified_k_accuracy(3), stratified_k_sensitivity(3), missclassified_samples()
-)   
+    multi_k_accuracy([1, 3, 5]),
+    multi_k_sensitivity([1, 3, 5]),
+    stratified_multi_k_accuracy([1, 3, 5]),
+    stratified_multi_k_sensitivity([1, 3, 5]),
+    enhanced_misclassified_samples()
+)
 
-summary = summarise_metrics(metrics, conditions_mapping)
+
+summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
+
 experiment_data['Metrics'] = '\n'.join(summary)
 
 ### MODEL EXPLANATION ###
 
-#model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
-#model_gradCAM.eval()
-#heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
-#fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
-#grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
-#experiment_data['GradCAM Plot Path'] = grad_cam_path
+model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
+model_gradCAM.eval()
+heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
+experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 
 ### SAVE RESULTS ###
-
-experiment_data['Dataset Path'] = path 
-experiment_data['Stratification Technique'] = stratification_strategy 
-experiment_data['Sampler Choice'] = balancer_strategy 
-experiment_data['Batch Size'] = batch_size 
-experiment_data['Model'] = 'ResNet50' 
-experiment_data['Learning Rate'] = lr 
-experiment_data['Optimizer'] = 'Adam' 
-experiment_data['Criterion'] = 'BCEWithLogitsLoss' 
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
 save_experiment_log(experiment_data, file_path=log_file)

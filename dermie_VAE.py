@@ -6,7 +6,7 @@ import torch
 from torchvision import models
 from VAE import *
 from TestFunction import *
-from metricsFunctions import *
+from metricsFunctions2 import *
 import matplotlib.pyplot as plt
 from xai import *
 import datetime
@@ -186,9 +186,20 @@ model = nn.Sequential(
     model.classifier,
    )
 
-metrics = test_model(model, pad_test_dataloader, device, top_k_accuracy(3), top_k_sensitivity(3), stratified_k_accuracy(3), stratified_k_sensitivity(3), missclassified_samples())   
+metrics = test_model(
+    model,
+    pad_test_dataloader,
+    device,
+    multi_k_accuracy([1, 3, 5]),
+    multi_k_sensitivity([1, 3, 5]),
+    stratified_multi_k_accuracy([1, 3, 5]),
+    stratified_multi_k_sensitivity([1, 3, 5]),
+    enhanced_misclassified_samples()
+)
 
-summary = summarise_metrics(metrics, conditions_mapping)
+
+summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
+
 experiment_data['Metrics'] = '\n'.join(summary)
 
 
@@ -203,12 +214,6 @@ grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
 
 ### SAVE RESULTS ###
 
-experiment_data['Dataset Path'] = path 
-experiment_data['Stratification Technique'] = stratification_strategy 
-experiment_data['Sampler Choice'] = balancer_strategy 
-experiment_data['Batch Size'] = batch_size 
-experiment_data['Model'] = 'ResNet18' 
-experiment_data['Optimizer'] = 'Adam' 
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
 experiment_data['GradCAM Plot Path'] = grad_cam_path
