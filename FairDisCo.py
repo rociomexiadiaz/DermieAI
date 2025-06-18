@@ -204,7 +204,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
     model.to(device)
 
     if optimizer is None:
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     if scheduler is None:
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
     if criterion is None:

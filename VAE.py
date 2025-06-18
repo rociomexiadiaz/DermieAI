@@ -108,7 +108,7 @@ class AdaptiveResampler:
         weights = np.ones(len(latent_vars))
         
         for i, z in enumerate(latent_vars):
-            weight = 1.0
+            log_weight = 0
             for j in range(self.latent_dim):
                 # Find which bin this latent variable falls into
                 bin_idx = np.digitize(z[j], self.bin_edges[j]) - 1
@@ -116,14 +116,11 @@ class AdaptiveResampler:
                 
                 # Compute weight based on inverse frequency
                 freq = self.histograms[j][bin_idx] + self.alpha
-                weight *= 1.0 / freq
+                log_weight += -np.log(freq)
             
+            weight = np.exp(log_weight)
             weights[i] = weight
             
-        # Normalize weights
-        weights = np.nan_to_num(weights, nan=0.0, posinf=0.0, neginf=0.0)
-        weights = np.clip(weights, 0, None)  # eliminate any negative weights
-
         if np.sum(weights) == 0:
             print("Warning: all weights are zero. Using uniform weights.")
             weights = np.ones_like(weights)
@@ -132,7 +129,7 @@ class AdaptiveResampler:
         return weights
     
 
-def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=1.0, c3=0.1):
+def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=1.0, c3=0.01):
     """
     Combined loss function for DB-VAE:
     - Classification loss (cross-entropy)
@@ -186,8 +183,8 @@ def train_epoch(model, loader, optimizer, scheduler, resampler, device):
     epoch_kl_loss = 0
 
     for batch in weighted_loader:
-        data = data.to(device)
-        target = target.to(device)
+        data = batch['image'].to(device)
+        target = batch['diagnosis'].to(device)
         
         optimizer.zero_grad()
         

@@ -146,7 +146,7 @@ fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 conditions_mapping = Dermie_train.diagnose_encoder.categories_[0]
 
 balancer_strategy = 'diagnostic' # or 'both'
-batch_size = 64
+batch_size = 32
 
 train_sampler = BalanceSampler(Dermie_train, choice=balancer_strategy)
 
@@ -164,7 +164,7 @@ pad_val_dataloader = torch.utils.data.DataLoader(
 )
 pad_test_dataloader = torch.utils.data.DataLoader(
     Dermie_val,
-    batch_size=64,
+    batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
@@ -175,11 +175,12 @@ pad_test_dataloader = torch.utils.data.DataLoader(
 model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=8)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 resampler = AdaptiveResampler()
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
 
 
 ### MODEL TRAINING AND TESTING ###
 
-model, fig = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, None, resampler, device=device, num_epochs=10)
+model, fig = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=15)
 loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(
