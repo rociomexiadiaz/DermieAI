@@ -273,15 +273,14 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
             optimizer_confusion, criterion, criterion_aux, alpha, GRL
         )
 
-        train_losses.append(train_loss)
-        train_losses_aux.append(train_loss_aux)
-
         eval_loss, eval_loss_aux = eval_epoch_TABE(
             model_encoder, model_classifier, model_aux, val_loader, criterion, criterion_aux, GRL
         )
 
-        val_losses.append(eval_loss)
-        val_losses_aux.append(eval_loss_aux)
+        train_losses.append(np.mean(train_loss))
+        val_losses.append(np.mean(eval_loss))
+        train_losses_aux.append(np.mean(train_loss_aux))
+        val_losses_aux.append(np.mean(eval_loss_aux))
 
         if np.mean(eval_loss) < best_val_loss:
             best_val_loss = np.mean(eval_loss)
