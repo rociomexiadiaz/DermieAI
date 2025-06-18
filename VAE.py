@@ -4,8 +4,8 @@ from torch import nn
 import torch
 import numpy as np
 from torch.utils.data import DataLoader, WeightedRandomSampler
+import matplotlib.pyplot as plt
 
-#ResNet101!
 
 class Decoder(nn.Module):
     def __init__(self, hidden_dims=[2048,1024,512,256,128,64]):
@@ -266,7 +266,24 @@ def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, 
 
     model.load_state_dict(best_model_state)
 
-    return model
+     # Plot losses
+    epochs = range(1, num_epochs + 1)
+    fig = plt.figure(figsize=(12, 8))
+
+    plt.plot(epochs, all_train_losses, label='Train Total Loss')
+    plt.plot(epochs, all_val_losses, label='Val Total Loss')
+    plt.plot(epochs, all_train_class_losses, label='Train Classification Loss', linestyle='--')
+    plt.plot(epochs, all_train_recon_losses, label='Train Reconstruction Loss', linestyle='--')
+    plt.plot(epochs, all_train_kl_losses, label='Train KL Divergence Loss', linestyle='--')
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Losses Over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    return model, fig
 
 
 

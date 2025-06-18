@@ -179,7 +179,8 @@ resampler = AdaptiveResampler()
 
 ### MODEL TRAINING AND TESTING ###
 
-model = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, None, resampler, device=device, num_epochs=10)
+model, fig = train_VAE(model, pad_train_dataloader, pad_val_dataloader, optimizer, None, resampler, device=device, num_epochs=10)
+loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(
     model.encoder,
@@ -218,6 +219,3 @@ experiment_data['Train Dataset Visualisation'] = fig_train_path
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
 experiment_data['GradCAM Plot Path'] = grad_cam_path
 save_experiment_log(experiment_data, file_path=log_file)
-
-print('done')
-

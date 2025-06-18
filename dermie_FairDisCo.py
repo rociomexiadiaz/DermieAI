@@ -172,7 +172,8 @@ pad_test_dataloader = torch.utils.data.DataLoader(
 ### MODEL LOADING ###
 
 model = Network(output_size=[1,8])
-model = train_model(model, pad_train_dataloader, pad_val_dataloader, device, num_epochs=10)
+model, fig = train_model(model, pad_train_dataloader, pad_val_dataloader, device, num_epochs=10)
+loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(
     model.feature_extractor,

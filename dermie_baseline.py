@@ -193,7 +193,7 @@ num_epochs = 10
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 criterion = torch.nn.BCEWithLogitsLoss()
 
-model = train_model(
+model, fig = train_model(
     model,
     pad_train_dataloader,
     pad_val_dataloader,
@@ -203,6 +203,7 @@ model = train_model(
     num_epochs=num_epochs,
     run_folder='Dermie_runs'
 )
+loss_path = save_plot_and_return_path(fig, 'losses')
 
 metrics = test_model(
     model,

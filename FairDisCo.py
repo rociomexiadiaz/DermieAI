@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 import datetime
 import os
+import matplotlib.pyplot as plt
 
 
 ### SETTING SEED AND DEVICE ### 
@@ -170,7 +171,8 @@ def val_epoch(model, dataloader, device, criterion, alpha=1.0, beta=0.8):
             loss1 = criterion[1](output[1], label_c)  # branch 2 confusion loss
             loss2 = criterion[2](output[2], label_c)  # branch 2 ce loss
             loss3 = criterion[3](output[3], label_t)  # supervised contrastive loss
-            loss = loss0+loss1+loss2+loss3
+            loss = loss0 + loss1 * alpha + loss2 + loss3 * beta
+
 
             running_loss += loss.item() * inputs.size(0)
             total_size += inputs.size(0)
@@ -240,4 +242,18 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
     final_chkp_pth = os.path.join(timestamped_folder, "final_model.pt")
     torch.save(best_model_state, final_chkp_pth)
 
-    return model
+    # Plot losses
+    epochs = range(1, num_epochs + 1)
+    fig = plt.figure(figsize=(12, 8))
+
+    plt.plot(epochs, train_losses, label='Train Total Loss')
+    plt.plot(epochs, val_losses, label='Val Total Loss')
+ 
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Losses Over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    return model, fig

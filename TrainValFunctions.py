@@ -1,6 +1,7 @@
 import torch
 import datetime
 import os   
+import matplotlib.pyplot as plt
 
 def train_epoch(model, train_loader, optimizer, criterion, device):
 
@@ -94,8 +95,22 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, n
     print(f"Final model saved: {final_chkp_pth}")
 
     model.load_state_dict(best_model_state['model_state_dict'])
+
+    # Plot losses
+    epochs = range(1, num_epochs + 1)
+    fig = plt.figure(figsize=(12, 8))
+
+    plt.plot(epochs, train_losses, label='Train Total Loss')
+    plt.plot(epochs, val_losses, label='Val Total Loss')
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Losses Over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
     
-    return model
+    return model, fig
 
 
 

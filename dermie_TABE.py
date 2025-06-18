@@ -193,7 +193,7 @@ model = nn.Sequential(
 
 ### MODEL TRAINING AND TESTING ###
 
-model_encoder, model_classifier, model_aux = train_model(
+model_encoder, model_classifier, model_aux, fig = train_model(
     model_encoder=model_encoder, 
     model_classifier=model_classifier, 
     model_aux=model_aux,
@@ -209,6 +209,8 @@ model_encoder, model_classifier, model_aux = train_model(
     alpha=alpha, 
     GRL=GRL
 )
+
+loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(
     model_encoder,

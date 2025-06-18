@@ -6,7 +6,7 @@ import tqdm
 import numpy as np
 import datetime
 import os
-
+import matplotlib.pyplot as plt
 
 ### SETTING SEED AND DEVICE ### 
 
@@ -311,4 +311,20 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
     model_classifier.load_state_dict(best_model_state['classifier_state_dict'])
     model_aux.load_state_dict(best_model_state['auxiliary_state_dict'])
 
-    return model_encoder, model_classifier, model_aux
+    # Plot losses
+    epochs = range(1, num_epochs + 1)
+    fig = plt.figure(figsize=(12, 8))
+
+    plt.plot(epochs, train_losses, label='Train Total Loss')
+    plt.plot(epochs, val_losses, label='Val Total Loss')
+    plt.plot(epochs, train_losses_aux, label='Train Aux Loss', linestyle='--')
+    plt.plot(epochs, val_losses_aux, label='Val Aux Loss', linestyle='--')
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Losses Over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    return model_encoder, model_classifier, model_aux, fig
