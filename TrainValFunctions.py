@@ -77,7 +77,7 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, n
         print(f'Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
 
         if scheduler:
-            scheduler.step(metrics=val_loss)
+            scheduler.step()
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss

@@ -1,5 +1,5 @@
 import pandas as pd
-from dermie_dataset import *
+from dermie_zip_dataset import *
 from sklearn.model_selection import train_test_split
 import torchvision.transforms as transforms
 import torch
@@ -32,14 +32,7 @@ def save_plot_and_return_path(fig, filename_base):
 
 experiment_data = {}
 experiment_data['Python Filename'] = os.path.basename(__file__)
-
-
-### LOAD AND CLEAN METADATA ###
-
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-path = os.path.join(project_dir, r'Data/dermie_data')
-images = rf'{path}/master_data_june_7_2025'
-metadata = clean_metadata(pd.read_csv(rf'{path}/master_data_june_7_2025.csv'), images)
 
 
 ### VISUALISE DATA ###
@@ -107,62 +100,85 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-Dermie_full = DermieDataset(metadata, images, transform=transformations_val_test) 
 
-visualise(Dermie_full)
-
-
-
-### CREATE DATASETS + DATALOADERS ###
-
-metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
 stratification_strategy = 'Diagnosis'  # 'stratify_col' -> Ensure all conditions and skin tones are in both train and test
 
-metadata_train, metadata_test = train_test_split(
-    metadata,
+### LOAD DATA ###
+
+# Dermie
+path_dermie = os.path.join(project_dir, r'Data/dermie_data')
+images_dermie = rf'{path_dermie}/master_data_june_7_2025.zip'
+metadata_dermie = clean_metadata(pd.read_csv(rf'{path_dermie}/master_data_june_7_2025.csv'), images_dermie)
+metadata_dermie = metadata_dermie[metadata_dermie['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+
+dermie_metadata_train, dermie_metadata_test = train_test_split(
+    metadata_dermie,
     test_size=0.3,
-    stratify=metadata[stratification_strategy],  
+    stratify=metadata_dermie[stratification_strategy],  
     random_state=42
 )
 
-metadata_val, test_df = train_test_split(
-    metadata_test,
+dermie_metadata_val, dermie_metadata_test = train_test_split(
+    dermie_metadata_test,
     test_size=0.4,
-    stratify=metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
+    stratify=dermie_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
     random_state=42
 )
 
-Dermie_train = DermieDataset(metadata_train, images, transform=transformations) 
-Dermie_val = DermieDataset(metadata_val, images, transform=transformations_val_test, diagnostic_encoder=Dermie_train.diagnose_encoder)
-Dermie_test = DermieDataset(metadata_test, images, transform=transformations_val_test, diagnostic_encoder=Dermie_train.diagnose_encoder)
+# PADUFES
+path_pad = os.path.join(project_dir, r'Data/padufes')
+images_pad = rf'{path_pad}/padufes_images.zip'
+metadata_pad = clean_metadata(pd.read_csv(rf'{path_pad}/padufes_metadata_clean.csv'), images_pad)
+metadata_pad = metadata_pad[metadata_pad['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
 
-fig_train = visualise(Dermie_train)
-fig_test = visualise(Dermie_test)
+pad_metadata_train, pad_metadata_test = train_test_split(
+    metadata_pad,
+    test_size=0.3,
+    stratify=metadata_pad[stratification_strategy],  
+    random_state=42
+)
+
+pad_metadata_val, pad_metadata_test = train_test_split(
+    pad_metadata_test,
+    test_size=0.4,
+    stratify=pad_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
+    random_state=42
+)
+
+
+### CREATE DATASETS AND DATALOADERS ###
+
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations) 
+val_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+
+fig_train = visualise(train_set)
+fig_test = visualise(test_set)
 
 fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
 fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 
-conditions_mapping = Dermie_train.diagnose_encoder.categories_[0]
+conditions_mapping = train_set.diagnose_encoder.categories_[0]
 
 balancer_strategy = 'diagnostic' # or 'both'
 batch_size = 64
 
-train_sampler = BalanceSampler(Dermie_train, choice=balancer_strategy)
+train_sampler = BalanceSampler(train_set, choice=balancer_strategy)
 
-pad_train_dataloader = torch.utils.data.DataLoader(
-    Dermie_train,
+train_dataloader = torch.utils.data.DataLoader(
+    train_set,
     batch_size=batch_size,
     num_workers=0,
     sampler=train_sampler
 )
-pad_val_dataloader = torch.utils.data.DataLoader(
-    Dermie_val,
+val_dataloader = torch.utils.data.DataLoader(
+    val_set,
     batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
-pad_test_dataloader = torch.utils.data.DataLoader(
-    Dermie_val,
+test_dataloader = torch.utils.data.DataLoader(
+    test_set,
     batch_size=64,
     shuffle=False,
     num_workers=0
@@ -196,8 +212,8 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
 
 model, fig = train_model(
     model,
-    pad_train_dataloader,
-    pad_val_dataloader,
+    train_dataloader,
+    val_dataloader,
     optimizer=optimizer,
     criterion=criterion,
     scheduler=scheduler,
@@ -209,7 +225,7 @@ loss_path = save_plot_and_return_path(fig, 'losses')
 
 metrics = test_model(
     model,
-    pad_test_dataloader,
+    test_dataloader,
     device,
     multi_k_accuracy([1, 3, 5]),
     multi_k_sensitivity([1, 3, 5]),
@@ -223,17 +239,19 @@ summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3
 
 experiment_data['Metrics'] = '\n'.join(summary)
 
+
 ### MODEL EXPLANATION ###
 
 model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
 model_gradCAM.eval()
-heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, pad_test_dataloader, device)
+heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
 fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
 grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
 experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 
 ### SAVE RESULTS ###
+
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
 save_experiment_log(experiment_data, file_path=log_file)
