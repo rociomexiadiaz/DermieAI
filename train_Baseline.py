@@ -2,7 +2,7 @@ from zip_dataset import *
 import torchvision.transforms as transforms
 import torch
 from torchvision import models
-from DermieAInew.metricsFunctions import *
+from metricsFunctions import *
 from Baseline import *
 from TestFunction import *
 import matplotlib.pyplot as plt
