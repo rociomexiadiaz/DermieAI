@@ -101,56 +101,154 @@ transformations_val_test = transforms.Compose([
 ])
 
 
-stratification_strategy = 'Diagnosis'  # 'stratify_col' -> Ensure all conditions and skin tones are in both train and test
 
 ### LOAD DATA ###
 
+def load_dataset(path_folder, images_dir, metadata_dir, stratification_strategy):
+    path = os.path.join(project_dir, rf'{path_folder}')
+    images = rf'{path}/{images_dir}'
+    metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+
+    
+    try:
+        metadata_train, metadata_test = train_test_split(
+            metadata,
+            test_size=0.3,
+            stratify=metadata[stratification_strategy],  
+            random_state=42
+        )
+    except ValueError as e:
+        metadata_train, metadata_test = train_test_split(
+            metadata,
+            test_size=0.3,
+            shuffle=True,
+            random_state=42
+        )
+
+    try:
+        metadata_val, metadata_test = train_test_split(
+            metadata_test,
+            test_size=0.4,
+            stratify=metadata_test[stratification_strategy],
+            random_state=42
+        )
+    except ValueError as e:
+        metadata_val, metadata_test = train_test_split(
+            metadata_test,
+            test_size=0.4,
+            shuffle=True,
+            random_state=42
+        )
+
+    return metadata_train, metadata_test, metadata_val, images
+
+stratification_strategy = 'Diagnosis'  # 'stratify_col' -> Ensure all conditions and skin tones are in both train and test
+
+
+dermie_metadata_train, dermie_metadata_test, dermie_metadata_val, images_dermie = load_dataset(path_folder=r'Data/dermie_data', 
+                                                                                               images_dir='master_data_june_7_2025.zip',
+                                                                                               metadata_dir='master_data_june_7_2025.csv',
+                                                                                               stratification_strategy=stratification_strategy)
+
+pad_metadata_train, pad_metadata_test, pad_metadata_val, images_pad = load_dataset(path_folder=r'Data/padufes', 
+                                                                                               images_dir='padufes_images.zip',
+                                                                                               metadata_dir='padufes_metadata_clean.csv',
+                                                                                               stratification_strategy=stratification_strategy)
+
+scin_metadata_train, scin_metadata_test, scin_metadata_val, images_scin = load_dataset(path_folder=r'Data/scin', 
+                                                                                               images_dir='scin_images.zip',
+                                                                                               metadata_dir='scin_metadata_clean.csv',
+                                                                                               stratification_strategy=stratification_strategy)
+
+
+experiment_data['Datasets'] = 'Dermie + Padufes + SCIN'
+
 # Dermie
-path_dermie = os.path.join(project_dir, r'Data/dermie_data')
-images_dermie = rf'{path_dermie}/master_data_june_7_2025.zip'
-metadata_dermie = clean_metadata(pd.read_csv(rf'{path_dermie}/master_data_june_7_2025.csv'), images_dermie)
-metadata_dermie = metadata_dermie[metadata_dermie['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+#path_dermie = os.path.join(project_dir, r'Data/dermie_data')
+#images_dermie = rf'{path_dermie}/master_data_june_7_2025.zip'
+#metadata_dermie = clean_metadata(pd.read_csv(rf'{path_dermie}/master_data_june_7_2025.csv'), images_dermie)
+#metadata_dermie = metadata_dermie[metadata_dermie['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
 
-dermie_metadata_train, dermie_metadata_test = train_test_split(
-    metadata_dermie,
-    test_size=0.3,
-    stratify=metadata_dermie[stratification_strategy],  
-    random_state=42
-)
+#dermie_metadata_train, dermie_metadata_test = train_test_split(
+    #metadata_dermie,
+    #test_size=0.3,
+    #stratify=metadata_dermie[stratification_strategy],  
+    #random_state=42
+#)
 
-dermie_metadata_val, dermie_metadata_test = train_test_split(
-    dermie_metadata_test,
-    test_size=0.4,
-    stratify=dermie_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
-    random_state=42
-)
+#dermie_metadata_val, dermie_metadata_test = train_test_split(
+    #dermie_metadata_test,
+    #test_size=0.4,
+    #stratify=dermie_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
+    #random_state=42
+#)
 
 # PADUFES
-path_pad = os.path.join(project_dir, r'Data/padufes')
-images_pad = rf'{path_pad}/padufes_images.zip'
-metadata_pad = clean_metadata(pd.read_csv(rf'{path_pad}/padufes_metadata_clean.csv'), images_pad)
-metadata_pad = metadata_pad[metadata_pad['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+#path_pad = os.path.join(project_dir, r'Data/padufes')
+#images_pad = rf'{path_pad}/padufes_images.zip'
+#metadata_pad = clean_metadata(pd.read_csv(rf'{path_pad}/padufes_metadata_clean.csv'), images_pad)
+#metadata_pad = metadata_pad[metadata_pad['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
 
-pad_metadata_train, pad_metadata_test = train_test_split(
-    metadata_pad,
-    test_size=0.3,
-    stratify=metadata_pad[stratification_strategy],  
-    random_state=42
-)
+#pad_metadata_train, pad_metadata_test = train_test_split(
+    #metadata_pad,
+    #test_size=0.3,
+    #stratify=metadata_pad[stratification_strategy],  
+    #random_state=42
+#)
 
-pad_metadata_val, pad_metadata_test = train_test_split(
-    pad_metadata_test,
-    test_size=0.4,
-    stratify=pad_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
-    random_state=42
-)
+#pad_metadata_val, pad_metadata_test = train_test_split(
+    #pad_metadata_test,
+    #test_size=0.4,
+    #stratify=pad_metadata_test[stratification_strategy],  # stratify=metadata['stratify_col'] -> Ensure all conditions and skin tones are in both val and test
+    #random_state=42
+#)
+
+
+# SCIN
+#path_scin = os.path.join(project_dir, r'Data/scin')
+#images_scin = rf'{path_scin}/scin_images.zip'
+#metadata_scin = clean_metadata(pd.read_csv(rf'{path_scin}/scin_metadata_clean.csv'), images_scin)
+#metadata_scin = metadata_scin[metadata_scin['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+
+#try:
+    #scin_metadata_train, scin_metadata_test = train_test_split(
+        #metadata_scin,
+        #test_size=0.3,
+        #stratify=metadata_scin[stratification_strategy],  
+        #random_state=42
+    #)
+#except ValueError as e:
+    #scin_metadata_train, scin_metadata_test = train_test_split(
+        #metadata_scin,
+        #test_size=0.3,
+        #shuffle=True,
+        #random_state=42
+    #)
+
+#try:
+    #scin_metadata_val, scin_metadata_test = train_test_split(
+        #scin_metadata_test,
+        #test_size=0.4,
+        #stratify=scin_metadata_test[stratification_strategy],
+        #random_state=42
+    #)
+#except ValueError as e:
+   # scin_metadata_val, scin_metadata_test = train_test_split(
+        #scin_metadata_test,
+        #test_size=0.4,
+        #shuffle=True,
+        #random_state=42
+   # )
+
+
 
 
 ### CREATE DATASETS AND DATALOADERS ###
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train], [images_dermie, images_pad], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train], [images_dermie, images_pad, images_scin], transform=transformations) 
+val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val], [images_dermie, images_pad, images_scin], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test], [images_dermie, images_pad, images_scin], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)

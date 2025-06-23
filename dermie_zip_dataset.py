@@ -22,6 +22,8 @@ def clean_metadata(pd_metadata: pd.DataFrame, images_dir):
    
     # Remove Unlabelled FST
     pd_metadata = pd_metadata[pd_metadata['Fitzpatrick'] != 'TODO']
+    pd_metadata = pd_metadata[pd_metadata['Fitzpatrick'] != 'NONE_IDENTIFIED']
+    pd_metadata = pd_metadata.dropna(subset=['Fitzpatrick'])
 
     # Remove Unlabelled Diagnsois
     pd_metadata.dropna(subset=['Diagnosis'], inplace=True)
