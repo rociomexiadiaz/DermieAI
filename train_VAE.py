@@ -56,6 +56,12 @@ scin_metadata_train, scin_metadata_test, scin_metadata_val, images_scin = load_d
                                                                                        metadata_dir='scin_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
+fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 = load_dataset(project_dir=project_dir,
+                                                                                       path_folder=r'Data/fitz17k', 
+                                                                                       images_dir='fitzpatrick17k_images.zip',
+                                                                                       metadata_dir='fitzpatrick17k_metadata_clean.csv',
+                                                                                       stratification_strategy=stratification_strategy)
+
 experiment_data['Datasets'] = 'Dermie + Padufes + SCIN'
 
 
@@ -76,9 +82,9 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train], [images_dermie, images_pad, images_scin], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val], [images_dermie, images_pad, images_scin], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test], [images_dermie, images_pad, images_scin], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations) 
+val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
