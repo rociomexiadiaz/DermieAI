@@ -59,7 +59,7 @@ fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 
                                                                                        metadata_dir='fitzpatrick17k_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
-experiment_data['Datasets'] = 'Dermie + Padufes + SCIN'
+experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k'
 
 
 ### CREATE DATASETS AND DATALOADERS ###
