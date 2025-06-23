@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import zipfile
 import io
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 
 def clean_metadata(pd_metadata: pd.DataFrame, images_dir):
@@ -51,67 +53,6 @@ def clean_metadata(pd_metadata: pd.DataFrame, images_dir):
     return pd_metadata
 
 
-class DermieDataset(Dataset):
-    def __init__(self, pd_metadata, images_dir, transform=None, diagnostic_encoder=None):
-        """
-        Args:
-            pd_metadata (pd DataFrame): metadata dataframe.
-            images_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied on a sample.
-        """
-        self.metadata = pd_metadata
-        self.images_dir = images_dir
-        self.transform = transform
-        self.stratify_col = self.metadata['stratify_col'].values
-        
-        self.img_ids = self.metadata['Image Name'].values
-        
-        fst_encoder = OrdinalEncoder(categories=[['I', 'II', 'III', 'IV', 'V', 'VI']])
-        self.fst_labels = fst_encoder.fit_transform(self.metadata['Fitzpatrick'].values.reshape(-1, 1)) + 1
-        
-        self.condition = self.metadata['Diagnosis'].values
-        if diagnostic_encoder is None:
-            self.diagnose_encoder = OneHotEncoder()
-            self.diagnostic = self.diagnose_encoder.fit_transform(self.metadata['Diagnosis'].values.reshape(-1, 1)).toarray()
-        
-        else:
-            self.diagnose_encoder = diagnostic_encoder
-            self.diagnostic = self.diagnose_encoder.transform(self.metadata['Diagnosis'].values.reshape(-1, 1)).toarray()
-            
-    def __len__(self):
-        return len(self.metadata)
-    
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-            
-        img_name = f"{self.img_ids[idx]}"
-        img_path = os.path.join(self.images_dir, img_name)
-            
-        try:
-            with zipfile.ZipFile(self.images_dir, 'r') as zip_ref:
-                with zip_ref.open(img_name) as file:
-                    image = Image.open(io.BytesIO(file.read())).convert('RGB')
-        except Exception as e:
-            print(f"Error loading image {img_name}: {e}")
-            image = Image.new('RGB', (224, 224), color='white')
-
-        if self.transform:
-            image = self.transform(image)
-                     
-        fst = torch.tensor(self.fst_labels[idx], dtype=torch.float)
-        diagnosis = torch.tensor(self.diagnostic[idx], dtype=torch.float)
-            
-        sample = {
-            'image': image,
-            'img_id': self.img_ids[idx],
-            'fst': fst,
-            'diagnosis': diagnosis,
-            'condition': self.condition[idx]
-        }
-            
-        return sample
-
 def BalanceSampler(dataset, choice='diagnostic'):
 
     if choice == 'diagnostic':
@@ -132,9 +73,6 @@ def BalanceSampler(dataset, choice='diagnostic'):
     replacement=True)  
 
     return sampler
-
-
-######################################################################################
 
 
 class MultipleDatasets(Dataset):
@@ -207,3 +145,91 @@ class MultipleDatasets(Dataset):
             'diagnosis': diagnosis,
             'condition': self.condition[idx]
         }
+    
+
+def visualise(dataset: MultipleDatasets):
+
+    metadata = dataset.metadata
+    print(metadata['Diagnosis'].value_counts(dropna=False))
+
+    fst_color_map = {
+    'I': '#F5D5A0',
+    'II': '#E4B589',
+    'III': '#D1A479',
+    'IV': '#C0874F',
+    'V': '#A56635',
+    'VI': '#4C2C27'
+    }
+
+    n_conditions = len(metadata['Diagnosis'].unique())
+
+    # Calculate grid dimensions
+    n_cols = 3  # Adjust as needed
+    n_rows = int(np.ceil(n_conditions / n_cols))
+
+    # Create figure and subplots
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5*n_rows))
+
+    # Flatten axes array for easier indexing
+    if n_rows == 1:
+        axes = [axes] if n_cols == 1 else axes
+    else:
+        axes = axes.flatten()
+
+    for i, condition in enumerate(metadata['Diagnosis'].unique()):
+        counts = metadata[metadata['Diagnosis'] == condition]['Fitzpatrick'].value_counts().sort_index()
+        colors = [fst_color_map[fst] for fst in counts.index]
+        
+        # Plot on the specific subplot
+        axes[i].pie(counts.values, labels=counts.index, colors=colors, 
+                    autopct='%1.1f%%', startangle=90)
+        axes[i].set_title(condition)
+        axes[i].axis('equal')
+
+    # Hide any unused subplots
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
+    return fig
+
+
+def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratification_strategy):
+    path = os.path.join(project_dir, rf'{path_folder}')
+    images = rf'{path}/{images_dir}'
+    metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+
+    try:
+        metadata_train, metadata_test = train_test_split(
+            metadata,
+            test_size=0.3,
+            stratify=metadata[stratification_strategy],  
+            random_state=42
+        )
+    except ValueError as e:
+        metadata_train, metadata_test = train_test_split(
+            metadata,
+            test_size=0.3,
+            shuffle=True,
+            random_state=42
+        )
+
+    try:
+        metadata_val, metadata_test = train_test_split(
+            metadata_test,
+            test_size=0.4,
+            stratify=metadata_test[stratification_strategy],
+            random_state=42
+        )
+    except ValueError as e:
+        metadata_val, metadata_test = train_test_split(
+            metadata_test,
+            test_size=0.4,
+            shuffle=True,
+            random_state=42
+        )
+
+    return metadata_train, metadata_test, metadata_val, images

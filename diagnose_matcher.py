@@ -1,23 +1,4 @@
-import pandas as pd
 from difflib import SequenceMatcher
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-
-def collate_metadata(metadata_files = ['Labelled_images_for_training_700_15_disease.csv']):
-    all_metadata = []
-
-    for file in metadata_files:
-        project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        path = os.path.join(project_dir, 'Data/dermie_images')
-        pd_metadata = pd.read_csv(f'{path}/{file}')
-
-        all_metadata.append(pd_metadata)
-
-    combined_metadata = pd.concat(all_metadata, ignore_index=True)
-
-    return combined_metadata
-
 
 class Diagnose:
 
@@ -77,27 +58,3 @@ class Diagnose:
         else:
             return 'NULL'
         
-
-        
-
-        
-
-
-
-
-combined_metadata = collate_metadata()
-
-# Drop duplicates
-combined_metadata.drop_duplicates(subset=['Image Name'], inplace=True)
-
-# Drop unlabelled fst
-combined_metadata = combined_metadata[combined_metadata['Fitzpatrick'] != 'TODO']
-
-# Clean diagnosis labels
-classifier = Diagnose()
-combined_metadata['Clean Diagnosis'] = combined_metadata['Diagnosis'].apply(lambda x: classifier.classify_label(x))
-combined_metadata['Clean Diagnosis'].replace({None:'NULL', np.nan:'NULL'},inplace=True)
-combined_metadata['15_diseases'].replace({None:'NULL', np.nan:'NULL'}, inplace=True)
-pd.set_option('display.max_rows', None)
-print((combined_metadata[combined_metadata["Clean Diagnosis"] != combined_metadata['15_diseases']][['Diagnosis','Clean Diagnosis','15_diseases']]))
-print(len(combined_metadata[combined_metadata["Clean Diagnosis"] != combined_metadata['15_diseases']][['Clean Diagnosis','15_diseases']]))
