@@ -232,7 +232,7 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
 
 
 def train_model(model_encoder, model_classifier, model_aux, train_loader, val_loader, num_epochs, optimizer, 
-                optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, alpha=0.1, GRL=False, run_folder=None):
+                optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, alpha=0.1, GRL=False):
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     os.makedirs("checkpoints", exist_ok=True)

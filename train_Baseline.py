@@ -150,8 +150,7 @@ model, fig = train_model(
     criterion=criterion,
     scheduler=scheduler,
     device=device,
-    num_epochs=num_epochs,
-    run_folder='Dermie_runs'
+    num_epochs=num_epochs
 )
 loss_path = save_plot_and_return_path(fig, 'losses')
 

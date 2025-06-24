@@ -183,7 +183,7 @@ def val_epoch(model, dataloader, device, criterion, alpha=1.0, beta=0.8):
 
 
 def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
-                optimizer=None, scheduler=None, criterion=None, alpha=1.0, beta=0.8, run_folder=None):
+                optimizer=None, scheduler=None, criterion=None, alpha=1.0, beta=0.8):
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     os.makedirs("checkpoints", exist_ok=True)
