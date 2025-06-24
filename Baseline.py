@@ -48,10 +48,6 @@ def validate_epoch(model, val_loader, criterion, device):
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, device, num_epochs=5, scheduler=None):
     
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    os.makedirs("checkpoints", exist_ok=True)
-    timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
-
     model.to(device)
 
     train_losses = []
@@ -77,9 +73,6 @@ def train_model(model, train_loader, val_loader, optimizer, criterion, device, n
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }
-
-    final_chkp_pth = os.path.join(timestamped_folder, "final_model.pt")
-    torch.save(best_model_state, final_chkp_pth)
 
     model.load_state_dict(best_model_state['model_state_dict'])
 
