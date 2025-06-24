@@ -185,21 +185,9 @@ def val_epoch(model, dataloader, device, criterion, alpha=1.0, beta=0.8):
 def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
                 optimizer=None, scheduler=None, criterion=None, alpha=1.0, beta=0.8, run_folder=None):
     
-
-     # Saving the model checkpoints
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     os.makedirs("checkpoints", exist_ok=True)
-
-    if run_folder is None:
-        timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
-        
-    else:
-        named_run_folder = os.path.join("checkpoints", run_folder)
-        os.makedirs(named_run_folder, exist_ok=True)
-        
-        timestamped_folder = os.path.join(named_run_folder, f'run_{timestamp}')
-
-    os.makedirs(timestamped_folder, exist_ok=True)
+    timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
 
     model.to(device)
 
@@ -233,9 +221,6 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
         if val_loss < best_loss:
             best_loss = val_loss
             best_model_state = model.state_dict()
-            chkp_pth = os.path.join(timestamped_folder, f"best_model_epoch_{epoch+1}.pt")
-            torch.save(best_model_state, chkp_pth)
-
 
     model.load_state_dict(best_model_state)
 

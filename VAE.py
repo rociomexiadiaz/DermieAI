@@ -232,7 +232,6 @@ def val_epoch(model, loader, device):
 
 def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, num_epochs, device):
 
-
     model.to(device)
 
     all_train_losses = []

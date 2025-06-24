@@ -234,20 +234,9 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
 def train_model(model_encoder, model_classifier, model_aux, train_loader, val_loader, num_epochs, optimizer, 
                 optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, alpha=0.1, GRL=False, run_folder=None):
     
-    # Saving the model checkpoints
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     os.makedirs("checkpoints", exist_ok=True)
-
-    if run_folder is None:
-        timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
-        
-    else:
-        named_run_folder = os.path.join("checkpoints", run_folder)
-        os.makedirs(named_run_folder, exist_ok=True)
-        
-        timestamped_folder = os.path.join(named_run_folder, f'run_{timestamp}')
-
-    os.makedirs(timestamped_folder, exist_ok=True)
+    timestamped_folder = os.path.join("checkpoints", f'run_{timestamp}')
     
     model_encoder.to(device)
     model_classifier.to(device)
@@ -284,7 +273,6 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
 
         if np.mean(eval_loss) < best_val_loss:
             best_val_loss = np.mean(eval_loss)
-            chkp_pth = os.path.join(timestamped_folder, f"best_model_epoch_{epoch+1}.pt")
             best_model_state = {
                 'encoder_state_dict': model_encoder.state_dict(),
                 'classifier_state_dict': model_classifier.state_dict(),
@@ -294,7 +282,6 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
                 'optimizer_confusion_state_dict': optimizer_confusion.state_dict(),
             }
 
-            torch.save(best_model_state, chkp_pth)
 
     final_chkp_pth = os.path.join(timestamped_folder, "final_model.pt")
     torch.save({
