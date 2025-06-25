@@ -61,7 +61,7 @@ fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 
                                                                                        metadata_dir='fitzpatrick17k_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
-experiment_data['Datasets'] = 'Dermie + SCIN + Fitzpatrick17k'
+experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k'
 
 
 ### CREATE DATASETS AND DATALOADERS ###
@@ -81,9 +81,9 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_set = MultipleDatasets([dermie_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_scin, images_fitz17], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_val, scin_metadata_val, fitz17_metadata_val], [images_dermie, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, scin_metadata_test, fitz17_metadata_test], [images_dermie, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=None) 
+val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test], [images_dermie, images_pad, images_scin, images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
@@ -183,5 +183,4 @@ experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
-save_experiment_log(experiment_data, file_path=log_file)
-
+save_experiment_log(experiment_data, file_path=log_file)    
