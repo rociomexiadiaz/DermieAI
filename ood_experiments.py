@@ -41,39 +41,66 @@ fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 
                                                                                        metadata_dir='fitzpatrick17k_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=None) 
-val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test], [images_dermie, images_pad, images_scin, images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder)
+### DATASET COMBINATIONS ###
+
+# All
+all_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=None) 
+
+# Minus dermie
+minusdermie_train_set = MultipleDatasets([pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_pad, images_scin, images_fitz17], transform=None) 
+
+# Minus PADUFES
+minuspad_train_set = MultipleDatasets([dermie_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_scin, images_fitz17], transform=None) 
+
+# Minus SCIN
+minusscin_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_fitz17], transform=None) 
+
+# Minus Fitz
+minusfitz_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train], [images_dermie, images_pad, images_scin], transform=None) 
+
+datasets = {'All': all_train_set,
+            'Minus dermie': minusdermie_train_set,
+            'Minus PADUFES': minuspad_train_set,
+            'Minus SCIN': minusscin_train_set,
+            'Minus Fitz': minusfitz_train_set}
 
 
-### OOD 1 ###
+### EXPERIMENTS ###  
 
-predictions = []
-fsts = []
-skin_indices = []
+with open("ood_report.txt", "w") as f:    
 
-for i in range(len(train_set)):
-    preds, fst = clip_predict(i, train_set, text_prompts=["a close-up of human skin", "not skin (background, objects, paper, clothes, etc.)"], random_crops=True)
-    predictions.append(preds)
-    predicted_label = max(preds, key=preds.get)
-    if "human skin" in predicted_label:
-        skin_indices.append(i)
-    fsts.append(fst)
+    for dataset_name, dataset in datasets.items():
 
-ood_performance(predictions, fsts)
+        f.write(dataset_name + "\n")
+
+        predictions = []
+        fsts = []
+        skin_indices = []
+
+        for i in range(len(dataset)):
+            preds, fst = clip_predict(i, dataset, text_prompts=["a close-up of human skin", "not skin (background, objects, paper, clothes, etc.)"], random_crops=True)
+            predictions.append(preds)
+            predicted_label = max(preds, key=preds.get)
+            if "human skin" in predicted_label:
+                skin_indices.append(i)
+            fsts.append(fst)
+
+        lines = ood_performance(predictions, fsts)
+        for line in lines:
+            f.write(line + "\n")
 
 
-### OOD 2 ###
+        predictions = []
+        fsts = []
 
-predictions = []
-fsts = []
+        for i in skin_indices:
+            preds, fst = clip_predict(i, dataset, text_prompts=["a close-up of healthy, clean human skin", "a close-up of diseased, unhealthy skin (eczema, acne, rashes, etc.)"])
+            predictions.append(preds)
+            fsts.append(fst)
 
-for i in skin_indices:
-    preds, fst = clip_predict(i, train_set, text_prompts=["a close-up of healthy, clean human skin", "a close-up of diseased, unhealthy skin (eczema, acne, rashes, etc.)"])
-    predictions.append(preds)
-    fsts.append(fst)
-
-ood_performance2(predictions, fsts)
+        lines = ood_performance(predictions, fsts)
+        for line in lines:
+            f.write(line + "\n")
 
 
 

@@ -61,68 +61,43 @@ def clip_predict(idx, dataset:MultipleDatasets, text_prompts:list, random_crops=
     return preds, fst
 
 
-def ood_performance(preds: list, fst: list):
+def ood_performance(preds: list, fst: list) -> list[str]:
 
     assert len(preds) == len(fst), "Length of preds and fst must match"
 
     predicted_labels = [max(p, key=p.get) for p in preds]
     unique_fst = sorted(set(fst))
-    all_counts = {"skin": 0, "not skin": 0, "total": 0}
+    unique_labels = sorted(set(predicted_labels))
+
+    # Initialize overall count dictionary
+    all_counts = {label: 0 for label in unique_labels}
+    all_counts["total"] = 0
+
+    lines = []
 
     for tone in unique_fst:
         tone_indices = [i for i, f in enumerate(fst) if f == tone]
         tone_preds = [predicted_labels[i] for i in tone_indices]
 
-        skin_count = sum(1 for p in tone_preds if "human skin" in p)
-        not_skin_count = sum(1 for p in tone_preds if "not skin" in p)
+        tone_counts = {label: 0 for label in unique_labels}
+        for label in tone_preds:
+            tone_counts[label] += 1
+
         total = len(tone_preds)
-
-        all_counts["skin"] += skin_count
-        all_counts["not skin"] += not_skin_count
         all_counts["total"] += total
+        for label in unique_labels:
+            all_counts[label] += tone_counts[label]
 
-        skin_pct = 100 * skin_count / total if total else 0
-        not_skin_pct = 100 * not_skin_count / total if total else 0
-
-        print(f"FST {tone}: Skin = {skin_pct:.2f}%, Not Skin = {not_skin_pct:.2f}% (N={total})")
+        lines.append(f"\nFST {tone} (N={total}):")
+        for label in unique_labels:
+            pct = 100 * tone_counts[label] / total if total else 0
+            lines.append(f"  {label}: {pct:.2f}%")
 
     # Overall
-    print("\n=== Overall ===")
-    overall_skin_pct = 100 * all_counts["skin"] / all_counts["total"]
-    overall_not_skin_pct = 100 * all_counts["not skin"] / all_counts["total"]
-    print(f"Skin = {overall_skin_pct:.2f}%, Not Skin = {overall_not_skin_pct:.2f}% (N={all_counts['total']})")
+    lines.append("\n=== Overall ===")
+    for label in unique_labels:
+        pct = 100 * all_counts[label] / all_counts["total"] if all_counts["total"] else 0
+        lines.append(f"{label}: {pct:.2f}% (N={all_counts[label]})")
 
+    return lines
 
-
-
-
-def ood_performance2(preds: list, fst: list):
-
-    assert len(preds) == len(fst), "Length of preds and fst must match"
-
-    predicted_labels = [max(p, key=p.get) for p in preds]
-    unique_fst = sorted(set(fst))
-    all_counts = {"healthy skin": 0, "unhealthy skin": 0, "total": 0}
-
-    for tone in unique_fst:
-        tone_indices = [i for i, f in enumerate(fst) if f == tone]
-        tone_preds = [predicted_labels[i] for i in tone_indices]
-
-        healthy_skin_count = sum(1 for p in tone_preds if "human skin" in p)
-        unhealthy_skin_count = sum(1 for p in tone_preds if "unhealthy skin" in p)
-        total = len(tone_preds)
-
-        all_counts["healthy skin"] += healthy_skin_count
-        all_counts["unhealthy skin"] += unhealthy_skin_count
-        all_counts["total"] += total
-
-        skin_pct = 100 * healthy_skin_count / total if total else 0
-        not_skin_pct = 100 * unhealthy_skin_count / total if total else 0
-
-        print(f"FST {tone}: Healthy Skin = {skin_pct:.2f}%, Unhealthy Skin = {not_skin_pct:.2f}% (N={total})")
-
-    # Overall
-    print("\n=== Overall ===")
-    overall_healthy_skin_pct = 100 * all_counts["healthy skin"] / all_counts["total"]
-    overall_unhealthy_skin_pct = 100 * all_counts["unhealthy skin"] / all_counts["total"]
-    print(f"Healthy Skin = {overall_healthy_skin_pct:.2f}%, Unhealthy Skin = {overall_unhealthy_skin_pct:.2f}% (N={all_counts['total']})")
