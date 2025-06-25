@@ -14,6 +14,7 @@ project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 ### LOAD DATA ###
+
 stratification_strategy = 'Diagnosis'  # 'stratify_col' -> Ensure all conditions and skin tones are in both train and test
 
 dermie_metadata_train, dermie_metadata_test, dermie_metadata_val, images_dermie = load_dataset(project_dir=project_dir,
@@ -46,6 +47,7 @@ test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metad
 
 
 ### OOD 1 ###
+
 predictions = []
 fsts = []
 skin_indices = []
@@ -60,7 +62,9 @@ for i in range(len(train_set)):
 
 ood_performance(predictions, fsts)
 
+
 ### OOD 2 ###
+
 predictions = []
 fsts = []
 
