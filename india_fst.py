@@ -2,19 +2,15 @@ import pandas as pd
 import zipfile
 import io
 import os
-from fst import get_sample_ita_kin  # Your ITA function
+from fst import get_sample_ita_kin  
 
-# Load metadata
+
 df = pd.read_csv('Data/india_data/india_metadata_clean.csv')
-
-# Open the zip file
 zip_path = 'Data/india_data/india_images.zip'
 zip_file = zipfile.ZipFile(zip_path, 'r')
 
-# Build map: filename (no path) → full path inside ZIP
 name_map = {os.path.basename(name): name for name in zip_file.namelist()}
 
-# Prepare list to store estimates
 fitz_values = []
 
 for img_name in df['Image Name']:
@@ -32,8 +28,6 @@ for img_name in df['Image Name']:
         print(f"Image {img_name} not found in ZIP")
         fitz_values.append(None)
 
-# Save results
 df['Fitzpatrick'] = fitz_values
-
 
 df.to_csv('india_metadata_estimate.csv', index=False)
