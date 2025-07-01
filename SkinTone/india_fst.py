@@ -2,7 +2,7 @@ import pandas as pd
 import zipfile
 import io
 import os
-from fst import get_sample_ita_kin  
+from fst import get_sample_ita_kin
 
 
 df = pd.read_csv('Data/india_data/india_metadata_clean.csv')
@@ -13,13 +13,15 @@ name_map = {os.path.basename(name): name for name in zip_file.namelist()}
 
 fitz_values = []
 
-for img_name in df['Image Name']:
+debug_save_count = 0
+
+for i, img_name in enumerate(df['Image Name']):
     full_path_in_zip = name_map.get(img_name)
     if full_path_in_zip:
         try:
             with zip_file.open(full_path_in_zip) as file:
                 image_bytes = file.read()
-                ita_label = get_sample_ita_kin(io.BytesIO(image_bytes))
+                ita_label = get_sample_ita_kin(io.BytesIO(image_bytes), str(i))
                 fitz_values.append(ita_label)
         except Exception as e:
             print(f"Error processing {img_name}: {e}")
