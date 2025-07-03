@@ -41,28 +41,38 @@ fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 
                                                                                        metadata_dir='fitzpatrick17k_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
+india_metadata_train, india_metadata_test, india_metadata_val, images_india = load_dataset(project_dir=project_dir,
+                                                                                       path_folder=r'Data/india_data', 
+                                                                                       images_dir='india_images.zip',
+                                                                                       metadata_dir='india_metadata_final.csv',
+                                                                                       stratification_strategy=stratification_strategy)
+
 ### DATASET COMBINATIONS ###
 
 # All
-all_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=None) 
+all_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None) 
 
 # Minus dermie
-minusdermie_train_set = MultipleDatasets([pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_pad, images_scin, images_fitz17], transform=None) 
+minusdermie_train_set = MultipleDatasets([pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_pad, images_scin, images_fitz17, images_india], transform=None) 
 
 # Minus PADUFES
-minuspad_train_set = MultipleDatasets([dermie_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_scin, images_fitz17], transform=None) 
+minuspad_train_set = MultipleDatasets([dermie_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_scin, images_fitz17, images_india], transform=None) 
 
 # Minus SCIN
-minusscin_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_fitz17], transform=None) 
+minusscin_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_fitz17, images_india], transform=None) 
 
 # Minus Fitz
-minusfitz_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train], [images_dermie, images_pad, images_scin], transform=None) 
+minusfitz_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_india], transform=None) 
+
+# Minus India
+minusindia_train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=None) 
 
 datasets = {'All': all_train_set,
             'Minus dermie': minusdermie_train_set,
             'Minus PADUFES': minuspad_train_set,
             'Minus SCIN': minusscin_train_set,
-            'Minus Fitz': minusfitz_train_set}
+            'Minus Fitz': minusfitz_train_set,
+            'Minus India': minusindia_train_set}
 
 
 ### EXPERIMENTS ###  

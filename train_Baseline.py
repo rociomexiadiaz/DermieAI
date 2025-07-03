@@ -61,7 +61,13 @@ fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 
                                                                                        metadata_dir='fitzpatrick17k_metadata_clean.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
-experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k'
+india_metadata_train, india_metadata_test, india_metadata_val, images_india = load_dataset(project_dir=project_dir,
+                                                                                       path_folder=r'Data/india_data', 
+                                                                                       images_dir='india_images.zip',
+                                                                                       metadata_dir='india_metadata_final.csv',
+                                                                                       stratification_strategy=stratification_strategy)
+
+experiment_data['Datasets'] = 'Dermie + Padufes + Fitzpatrick17k + India'
 
 
 ### CREATE DATASETS AND DATALOADERS ###
@@ -81,9 +87,9 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test], [images_dermie, images_pad, images_scin, images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_fitz17, images_india], transform=transformations) 
+val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
@@ -128,9 +134,10 @@ model.fc = torch.nn.Sequential(
 )
 
 for name, param in model.named_parameters():
-    #param.requires_grad = True
-    if 'fc' not in name:
-        #continue
+    #if 'fc' in name:
+    if 'layer4' in name or 'fc' in name:
+        param.requires_grad = True
+    else:
         param.requires_grad = False
 
 
@@ -141,6 +148,7 @@ num_epochs = 10
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 criterion = torch.nn.BCEWithLogitsLoss()
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2], gamma=0.1) #For the India dataset
 
 model, fig = train_model(
     model,
