@@ -4,7 +4,7 @@ from metricsFunctions import *
 from Baseline import *
 from TestFunction import *
 from xai import *
-from ood import *
+from CLIP import *
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
@@ -88,7 +88,10 @@ with open("ood_report.txt", "w") as f:
         skin_indices = []
 
         for i in range(len(dataset)):
-            preds, fst = clip_predict(i, dataset, text_prompts=["a close-up of human skin", "not skin (background, objects, paper, clothes, etc.)"], random_crops=True)
+            preds, fst = clip_predict(i, dataset, 
+                                      text_prompts=["a close-up of human skin", "not skin (background, objects, paper, clothes, etc.)"], 
+                                      random_crops=True,
+                                      model='LesionCLIP')
             predictions.append(preds)
             predicted_label = max(preds, key=preds.get)
             if "human skin" in predicted_label:
@@ -104,7 +107,11 @@ with open("ood_report.txt", "w") as f:
         fsts = []
 
         for i in skin_indices:
-            preds, fst = clip_predict(i, dataset, text_prompts=["a close-up of healthy, clean human skin", "a close-up of diseased, unhealthy skin (eczema, acne, rashes, etc.)"])
+            preds, fst = clip_predict(i, dataset, 
+                                      text_prompts=["a close-up of healthy, clean human skin", "a close-up of diseased, unhealthy skin (eczema, acne, rashes, etc.)"],
+                                      random_crops=False,
+                                      model='LesionCLIP')
+            
             predictions.append(preds)
             fsts.append(fst)
 

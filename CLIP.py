@@ -1,16 +1,25 @@
-import clip
 import torch
+from PIL import Image
+import open_clip
+import clip
 from zip_dataset import *
 from torchvision.transforms import transforms
 from collections import defaultdict
 
-# Load the model
 torch.manual_seed(0)
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model, preprocess = clip.load('ViT-L/14', device)
 
+def clip_predict(idx, dataset:MultipleDatasets, text_prompts:list, random_crops=False, num_crops=5, model='LesionCLIP'):
 
-def clip_predict(idx, dataset:MultipleDatasets, text_prompts:list, random_crops=False, num_crops=5):
+    if model=='CLIP':
+        # Load the CLIP model
+        model, preprocess = clip.load('ViT-L/14', device)
+
+    elif model=='LesionCLIP':
+        # Load the LesionCLIP model
+        model, _, preprocess = open_clip.create_model_and_transforms("hf-hub:yyupenn/whylesionclip")
+        model.to(device)
+        model.eval()
 
     sample = dataset[idx]  
     image = sample['image']
@@ -100,4 +109,5 @@ def ood_performance(preds: list, fst: list) -> list[str]:
         lines.append(f"{label}: {pct:.2f}% (N={all_counts[label]})")
 
     return lines
+
 
