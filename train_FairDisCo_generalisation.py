@@ -11,6 +11,8 @@ from xai import *
 
 torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.cuda.empty_cache()
+torch.cuda.reset_peak_memory_stats()
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 os.makedirs('Logs', exist_ok=True)

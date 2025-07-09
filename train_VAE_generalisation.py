@@ -13,6 +13,8 @@ import datetime
 
 torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.cuda.empty_cache()
+torch.cuda.reset_peak_memory_stats()
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 os.makedirs('Logs', exist_ok=True)
@@ -141,7 +143,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     conditions_mapping = train_set.diagnose_encoder.categories_[0]
 
     balancer_strategy = 'diagnostic' # or 'both'
-    batch_size = 64
+    batch_size = 32
 
     train_sampler = BalanceSampler(train_set, choice=balancer_strategy)
 
