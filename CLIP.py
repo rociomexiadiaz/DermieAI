@@ -9,15 +9,20 @@ from collections import defaultdict
 torch.manual_seed(0)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-def clip_predict(idx, dataset:MultipleDatasets, text_prompts:list, random_crops=False, num_crops=5, model='LesionCLIP'):
+model, preprocess = clip.load('ViT-L/14', device)
+lesion_model, _, lesion_preprocess = open_clip.create_model_and_transforms("hf-hub:yyupenn/whylesionclip")
 
-    if model=='CLIP':
+def clip_predict(idx, dataset:MultipleDatasets, text_prompts:list, random_crops=False, num_crops=5, model_name='LesionCLIP'):
+
+    global model, preprocess, lesion_model, lesion_preprocess
+    
+    if model_name=='CLIP':
         # Load the CLIP model
-        model, preprocess = clip.load('ViT-L/14', device)
+        model, preprocess = model, preprocess
 
-    elif model=='LesionCLIP':
+    elif model_name=='LesionCLIP':
         # Load the LesionCLIP model
-        model, _, preprocess = open_clip.create_model_and_transforms("hf-hub:yyupenn/whylesionclip")
+        model, preprocess = lesion_model, lesion_preprocess
         model.to(device)
         model.eval()
 

@@ -82,6 +82,7 @@ with open("ood_report.txt", "w") as f:
     for dataset_name, dataset in datasets.items():
 
         f.write(dataset_name + "\n")
+        print(dataset_name)
 
         predictions = []
         fsts = []
@@ -91,7 +92,7 @@ with open("ood_report.txt", "w") as f:
             preds, fst = clip_predict(i, dataset, 
                                       text_prompts=["a close-up of human skin", "not skin (background, objects, paper, clothes, etc.)"], 
                                       random_crops=True,
-                                      model='LesionCLIP')
+                                      model_name='LesionCLIP')
             predictions.append(preds)
             predicted_label = max(preds, key=preds.get)
             if "human skin" in predicted_label:
@@ -110,7 +111,7 @@ with open("ood_report.txt", "w") as f:
             preds, fst = clip_predict(i, dataset, 
                                       text_prompts=["a close-up of healthy, clean human skin", "a close-up of diseased, unhealthy skin (eczema, acne, rashes, etc.)"],
                                       random_crops=False,
-                                      model='LesionCLIP')
+                                      model_name='LesionCLIP')
             
             predictions.append(preds)
             fsts.append(fst)
