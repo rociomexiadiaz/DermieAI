@@ -36,6 +36,12 @@ class FeatureExtractor(nn.Module):
         super(FeatureExtractor, self).__init__()
        
         self.enet = enet
+        for name, param in self.enet.named_parameters():
+            if 'layer4' in name or 'fc' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+                
         self.in_ch = self.enet.fc.in_features
         self.enet.fc = nn.Identity()
         

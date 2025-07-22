@@ -44,6 +44,12 @@ class VAEmodel(nn.Module):
         hidden_dim = 256
 
         self.encoder = encoder
+        for name, param in self.encoder.named_parameters():
+            if 'layer4' in name or 'fc' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+                
         num_ftrs = self.encoder.fc.in_features
         self.encoder.fc = nn.Linear(num_ftrs, bottle_neck)
 

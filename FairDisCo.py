@@ -25,6 +25,12 @@ class Network(torch.nn.Module):
         bottle_neck = 256
 
         self.feature_extractor = models.resnet152(weights=weights)
+        for name, param in self.feature_extractor.named_parameters():
+            if 'layer4' in name or 'fc' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+                
         num_ftrs = self.feature_extractor.fc.in_features
         self.feature_extractor.fc = nn.Linear(num_ftrs, bottle_neck)
         # for contrastive loss
