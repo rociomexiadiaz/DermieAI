@@ -134,12 +134,21 @@ class enhanced_misclassified_samples():
                 misclassification_by_skin_tone[skin_tone].append((int(true_diagnosis[i]), int(predicted_diagnosis[i])))
 
 
+        #overall_common = Counter(
+            #(v[1], v[2]) for v in misclassification.values()
+        #).most_common(5)
+
+        #skintone_common = {
+            #tone: Counter(pairs).most_common(3)
+            #for tone, pairs in misclassification_by_skin_tone.items()
+        #}
+
         overall_common = Counter(
             (v[1], v[2]) for v in misclassification.values()
-        ).most_common(5)
+        )
 
         skintone_common = {
-            tone: Counter(pairs).most_common(3)
+            tone: Counter(pairs)
             for tone, pairs in misclassification_by_skin_tone.items()
         }
         
@@ -225,19 +234,35 @@ def display_misclassifications(results, conditions_mapping):
 
     # Most common misclassifications (overall)
     output.append("\n=== MOST COMMON MISCLASSIFICATIONS (OVERALL) ===")
-    for (true_label, pred_label), count in common_misclassifications:
-        true_name = conditions_mapping[true_label]
-        pred_name = conditions_mapping[pred_label]
-        output.append(f"  {true_name} → {pred_name}: {count} times")
+    if hasattr(common_misclassifications, 'most_common'):
+        # It's a Counter object
+        for (true_label, pred_label), count in common_misclassifications.most_common():
+            true_name = conditions_mapping[true_label]
+            pred_name = conditions_mapping[pred_label]
+            output.append(f"  {true_name} → {pred_name}: {count} times")
+    else:
+        # It's already a list of tuples
+        for (true_label, pred_label), count in common_misclassifications:
+            true_name = conditions_mapping[true_label]
+            pred_name = conditions_mapping[pred_label]
+            output.append(f"  {true_name} → {pred_name}: {count} times")
 
     # Most common misclassifications by skin tone
     output.append("\n=== MOST COMMON MISCLASSIFICATIONS BY SKIN TONE ===")
     for skintone, misclass_list in common_by_skintone.items():
         output.append(f"\nSkin Tone {skintone}:")
-        for (true_label, pred_label), count in misclass_list:
-            true_name = conditions_mapping[true_label]
-            pred_name = conditions_mapping[pred_label]
-            output.append(f"  {true_name} → {pred_name}: {count} times")
+        if hasattr(misclass_list, 'most_common'):
+            # It's a Counter object
+            for (true_label, pred_label), count in misclass_list.most_common():
+                true_name = conditions_mapping[true_label]
+                pred_name = conditions_mapping[pred_label]
+                output.append(f"  {true_name} → {pred_name}: {count} times")
+        else:
+            # It's already a list of tuples
+            for (true_label, pred_label), count in misclass_list:
+                true_name = conditions_mapping[true_label]
+                pred_name = conditions_mapping[pred_label]
+                output.append(f"  {true_name} → {pred_name}: {count} times")
 
     return output
 
