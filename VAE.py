@@ -138,7 +138,7 @@ class AdaptiveResampler:
         return weights
     
 
-def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=1.0, c3=0.01):
+def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=0.5, c3=0.01):
     """
     Combined loss function for DB-VAE:
     - Classification loss (cross-entropy)
