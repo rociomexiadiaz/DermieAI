@@ -2,7 +2,7 @@ from zip_dataset import *
 import torchvision.transforms as transforms
 import torch
 from torchvision import models
-from metricsFunctions import *
+from metricsFunctions2 import *
 from Baseline import *
 from TestFunction import *
 import matplotlib.pyplot as plt
@@ -170,7 +170,11 @@ metrics = test_model(
     multi_k_sensitivity([1, 3, 5]),
     stratified_multi_k_accuracy([1, 3, 5]),
     stratified_multi_k_sensitivity([1, 3, 5]),
-    enhanced_misclassified_samples()
+    enhanced_misclassified_samples(),
+    f1_score_metric(),
+    stratified_f1_score(),
+    balanced_accuracy(),
+    stratified_balanced_accuracy()
 )
 
 summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])

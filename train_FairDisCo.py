@@ -3,7 +3,8 @@ import torchvision.transforms as transforms
 import torch
 from FairDisCo import *
 from TestFunction import *
-from metricsFunctions import *
+from metricsFunctions2 import *
+import datetime
 import matplotlib.pyplot as plt
 from xai import *
 
@@ -140,7 +141,11 @@ metrics = test_model(
     multi_k_sensitivity([1, 3, 5]),
     stratified_multi_k_accuracy([1, 3, 5]),
     stratified_multi_k_sensitivity([1, 3, 5]),
-    enhanced_misclassified_samples()
+    enhanced_misclassified_samples(),
+    f1_score_metric(),
+    stratified_f1_score(),
+    balanced_accuracy(),
+    stratified_balanced_accuracy()
 )
 
 

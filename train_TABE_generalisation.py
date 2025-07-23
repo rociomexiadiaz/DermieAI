@@ -4,7 +4,7 @@ import torch
 from torchvision import models
 from TABE import *
 from TestFunction import *
-from metricsFunctions import *
+from metricsFunctions2 import *
 import matplotlib.pyplot as plt
 from xai import *
 
@@ -220,7 +220,11 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
         multi_k_sensitivity([1, 3, 5]),
         stratified_multi_k_accuracy([1, 3, 5]),
         stratified_multi_k_sensitivity([1, 3, 5]),
-        enhanced_misclassified_samples()
+        enhanced_misclassified_samples(),
+        f1_score_metric(),
+        stratified_f1_score(),
+        balanced_accuracy(),
+        stratified_balanced_accuracy()
     )
 
 
