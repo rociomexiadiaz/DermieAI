@@ -109,7 +109,7 @@ dataset_combinations = {
         'images': [images_dermie, images_scin, images_fitz17, images_india],
         'description': 'Dermie + SCIN + Fitzpatrick17k + India'
     },
-    'Minus_TABE': {
+    'Minus_Fitz': {
         'train': [dermie_metadata_train, pad_metadata_train, scin_metadata_train, india_metadata_train],
         'val': [dermie_metadata_val, pad_metadata_val, scin_metadata_val, india_metadata_val],
         'test': [dermie_metadata_test, pad_metadata_test, scin_metadata_test, india_metadata_test],

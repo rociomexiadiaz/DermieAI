@@ -112,6 +112,28 @@ class AdaptiveResampler:
         """Compute sampling weights based on latent variable rarity"""
         latent_vars = latent_vars.detach().cpu().numpy()
         weights = np.ones(len(latent_vars))
+
+        ###########################################################
+        outside_range = (latent_vars < -3) | (latent_vars > 3)
+        if np.any(outside_range):
+            num_outside = np.sum(outside_range)
+            total_values = latent_vars.size
+            percentage = (num_outside / total_values) * 100
+            
+            min_val = np.min(latent_vars)
+            max_val = np.max(latent_vars)
+            
+            print(f"WARNING: {num_outside}/{total_values} ({percentage:.2f}%) latent values outside [-3, 3] range")
+            print(f"  Actual range: [{min_val:.3f}, {max_val:.3f}]")
+            
+            # Show which dimensions are most problematic
+            dims_outside = np.any(outside_range, axis=0)
+            problematic_dims = np.where(dims_outside)[0]
+            if len(problematic_dims) > 0:
+                print(f"  Problematic dimensions: {problematic_dims[:10]}")  # Show first 10
+                if len(problematic_dims) > 10:
+                    print(f"  ... and {len(problematic_dims) - 10} more")
+        ###############################################################
         
         for i, z in enumerate(latent_vars):
             log_weight = 0

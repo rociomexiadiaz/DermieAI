@@ -134,8 +134,8 @@ model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 
 optimizer = torch.optim.SGD(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
                             lr=0.001, momentum=0.9, weight_decay=1e-4)
-optimizer_confusion = torch.optim.SGD(model_encoder.parameters(), lr=0.001, momentum=0.9)  # Defining confusion optimiser (boosted encoder optimiser)
-optimizer_aux = torch.optim.SGD(model_aux.parameters(), lr=0.001, momentum=0.9)  # defining auxiliary classification optimiser
+optimizer_confusion = torch.optim.SGD(model_encoder.parameters(), lr=0.001, momentum=0.9)  
+optimizer_aux = torch.optim.SGD(model_aux.parameters(), lr=0.001, momentum=0.9)  
 
 criterion = nn.CrossEntropyLoss()
 criterion_aux = nn.CrossEntropyLoss()
