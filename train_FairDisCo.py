@@ -125,7 +125,7 @@ test_dataloader = torch.utils.data.DataLoader(
 ### MODEL LOADING ###
 
 model = Network(output_size=[1,8])
-model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=20)
+model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
 loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(

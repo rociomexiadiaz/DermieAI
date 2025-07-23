@@ -15,7 +15,7 @@ torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-os.makedirs('Logs', exist_ok=True)
+os.makedirs('Logs (datasets)', exist_ok=True)
 
 def save_experiment_log(data, file_path):
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -23,7 +23,7 @@ def save_experiment_log(data, file_path):
             f.write(f"{key}: {value}\n")
 
 def save_plot_and_return_path(fig, filename_base, dataset_combo):
-    filename = f"Logs/{filename_base}_{dataset_combo}_{experiment_timestamp}.png"
+    filename = f"Logs (datasets)/{filename_base}_{dataset_combo}_{experiment_timestamp}.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filename
@@ -252,7 +252,7 @@ for combo_name, combo_data in dataset_combinations.items():
     # Initialize optimizer and scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.BCEWithLogitsLoss()
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2], gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2,3], gamma=0.1)
     
     # Train model
     print("Training model...")
@@ -309,7 +309,7 @@ for combo_name, combo_data in dataset_combinations.items():
     experiment_data['Loss Plot Path'] = loss_path
     
     # Save experiment log
-    log_file = f"Logs/dermie_experiment_{combo_name}_{experiment_timestamp}.txt"
+    log_file = f"Logs (datasets)/dermie_experiment_{combo_name}_{experiment_timestamp}.txt"
     save_experiment_log(experiment_data, file_path=log_file)
     
     print(f"Experiment {combo_name} completed!")

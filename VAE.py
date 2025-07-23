@@ -112,31 +112,10 @@ class AdaptiveResampler:
         """Compute sampling weights based on latent variable rarity"""
         latent_vars = latent_vars.detach().cpu().numpy()
         weights = np.ones(len(latent_vars))
-
-        ###########################################################
-        outside_range = (latent_vars < -3) | (latent_vars > 3)
-        if np.any(outside_range):
-            num_outside = np.sum(outside_range)
-            total_values = latent_vars.size
-            percentage = (num_outside / total_values) * 100
-            
-            min_val = np.min(latent_vars)
-            max_val = np.max(latent_vars)
-            
-            print(f"WARNING: {num_outside}/{total_values} ({percentage:.2f}%) latent values outside [-3, 3] range")
-            print(f"  Actual range: [{min_val:.3f}, {max_val:.3f}]")
-            
-            # Show which dimensions are most problematic
-            dims_outside = np.any(outside_range, axis=0)
-            problematic_dims = np.where(dims_outside)[0]
-            if len(problematic_dims) > 0:
-                print(f"  Problematic dimensions: {problematic_dims[:10]}")  # Show first 10
-                if len(problematic_dims) > 10:
-                    print(f"  ... and {len(problematic_dims) - 10} more")
-        ###############################################################
-        
+       
         for i, z in enumerate(latent_vars):
-            log_weight = 0
+            log_weight_sum = 0
+
             for j in range(self.latent_dim):
                 # Find which bin this latent variable falls into
                 bin_idx = np.digitize(z[j], self.bin_edges[j]) - 1
@@ -144,11 +123,13 @@ class AdaptiveResampler:
                 
                 # Compute weight based on inverse frequency
                 freq = self.histograms[j][bin_idx] + self.alpha
-                log_weight += -np.log(freq)
+                log_weight_sum += -np.log(freq)
+
+            log_weight = log_weight_sum / self.latent_dim
             
             weight = np.exp(log_weight)
             weights[i] = weight
-            
+                
         if np.sum(weights) == 0:
             print("Warning: all weights are zero. Using uniform weights.")
             weights = np.ones_like(weights)
@@ -277,6 +258,8 @@ def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, 
 
         train_loss, train_class_loss, train_recon_loss, train_kl_loss = train_epoch(model, train_loader, optimizer, scheduler, resampler, device)
         val_loss = val_epoch(model, val_loader, device)
+
+        print(f'Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
 
         all_train_losses.append(train_loss)
         all_train_class_losses.append(train_class_loss)
