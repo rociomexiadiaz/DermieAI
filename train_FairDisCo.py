@@ -90,6 +90,11 @@ train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_me
 val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
+# CLIP
+#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations, clip=True, apply_augment=True) 
+#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
 

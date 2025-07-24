@@ -92,6 +92,11 @@ train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_me
 val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
+# CLIP
+#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations, clip=True, apply_augment=True) 
+#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
 
@@ -128,7 +133,19 @@ test_dataloader = torch.utils.data.DataLoader(
 
 ### MODEL LOADING ###
 
+class FC(nn.Module):
+    def __init__(self, input_dim=768, output_dim=256):
+        super(FC, self).__init__()
+        self.fc = nn.Linear(input_dim, output_dim)  
+
+    def forward(self, x):
+        return self.fc(x)
+  
 model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=num_conditions)
+
+# CLIP
+#model = VAEmodel(encoder=FC(), num_classes=num_conditions)
+
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 resampler = AdaptiveResampler(alpha=0.1)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
