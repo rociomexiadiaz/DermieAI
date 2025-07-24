@@ -99,6 +99,7 @@ fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
 fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 
 conditions_mapping = train_set.diagnose_encoder.categories_[0]
+num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
 batch_size = 32
@@ -127,7 +128,7 @@ test_dataloader = torch.utils.data.DataLoader(
 
 ### MODEL LOADING ###
 
-model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=8)
+model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=num_conditions)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 resampler = AdaptiveResampler(alpha=0.1)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)

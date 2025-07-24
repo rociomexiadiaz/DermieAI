@@ -139,6 +139,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     experiment_data['Test Dataset Visualisation'] = fig_test_path
 
     conditions_mapping = train_set.diagnose_encoder.categories_[0]
+    num_conditions = len(conditions_mapping)
 
     balancer_strategy = 'diagnostic' # or 'both'
     batch_size = 64
@@ -168,7 +169,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
     ### MODEL LOADING ###
 
-    model = Network(output_size=[1,8])
+    model = Network(output_size=[1,num_conditions])
     model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=20)
     
     loss_path = save_plot_and_return_path(fig, f'{test_name}_losses')

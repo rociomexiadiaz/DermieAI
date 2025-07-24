@@ -238,7 +238,7 @@ def eval_epoch_TABE(model_encoder, model_classifier, model_aux, loader, criterio
 
 
 def train_model(model_encoder, model_classifier, model_aux, train_loader, val_loader, num_epochs, optimizer, 
-                optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, alpha=0.1, GRL=False):
+                optimizer_aux,optimizer_confusion, criterion, criterion_aux, device, scheduler=None, alpha=0.1, GRL=False):
     
     model_encoder.to(device)
     model_classifier.to(device)
@@ -273,6 +273,9 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
         train_losses_aux.append(np.mean(train_loss_aux))
         val_losses_aux.append(np.mean(eval_loss_aux))
 
+        if scheduler:
+            scheduler.step()
+
         if np.mean(eval_loss) < best_val_loss:
             best_val_loss = np.mean(eval_loss)
             best_model_state = {
@@ -293,8 +296,8 @@ def train_model(model_encoder, model_classifier, model_aux, train_loader, val_lo
     epochs = range(1, num_epochs + 1)
     fig = plt.figure(figsize=(12, 8))
 
-    plt.plot(epochs, train_losses, label='Train Total Loss')
-    plt.plot(epochs, val_losses, label='Val Total Loss')
+    plt.plot(epochs, train_losses, label='Train Loss')
+    plt.plot(epochs, val_losses, label='Val Loss')
     plt.plot(epochs, train_losses_aux, label='Train Aux Loss', linestyle='--')
     plt.plot(epochs, val_losses_aux, label='Val Aux Loss', linestyle='--')
 

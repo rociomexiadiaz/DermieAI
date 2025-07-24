@@ -138,6 +138,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     experiment_data['Test Dataset Visualisation'] = fig_test_path
 
     conditions_mapping = train_set.diagnose_encoder.categories_[0]
+    num_conditions = len(conditions_mapping)
 
     balancer_strategy = 'diagnostic' # or 'both'
     batch_size = 64
@@ -166,7 +167,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     ### MODEL LOADING ###
 
     model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
-    model_classifier = ClassificationHead(out_dim=8, in_ch=model_encoder.in_ch)
+    model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
     model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 
     optimizer = torch.optim.SGD(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),

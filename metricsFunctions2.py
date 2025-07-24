@@ -138,10 +138,10 @@ class enhanced_misclassified_samples():
 
         overall_common = Counter(
             (v[1], v[2]) for v in misclassification.values()
-        ).most_common(5)
+        )
 
         skintone_common = {
-            tone: Counter(pairs).most_common(3)
+            tone: Counter(pairs)
             for tone, pairs in misclassification_by_skin_tone.items()
         }
         

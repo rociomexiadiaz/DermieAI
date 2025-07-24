@@ -98,6 +98,7 @@ fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
 fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 
 conditions_mapping = train_set.diagnose_encoder.categories_[0]
+num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
 batch_size = 64
@@ -128,9 +129,8 @@ test_dataloader = torch.utils.data.DataLoader(
 
 model = models.resnet152(weights='IMAGENET1K_V1')
 
-num_classes = 8
 model.fc = torch.nn.Sequential(
-    torch.nn.Linear(model.fc.in_features, num_classes),
+    torch.nn.Linear(model.fc.in_features, num_conditions),
 )
 
 for name, param in model.named_parameters():

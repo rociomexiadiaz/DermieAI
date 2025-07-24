@@ -85,12 +85,22 @@ class MultipleDatasets(Dataset):
         """
         assert len(metadata_list) == len(image_zip_list), "Metadata and image zip lists must be the same length"
         
+        valid_pairs = [(metadata, zip_path) for metadata, zip_path in zip(metadata_list, image_zip_list) 
+                            if metadata is not None and zip_path is not None]
+        
+        if not valid_pairs:
+            raise ValueError("All datasets are None! No valid datasets to load.")
+        
+        # Separate back into lists
+        valid_metadata_list = [pair[0] for pair in valid_pairs]
+        valid_image_zip_list = [pair[1] for pair in valid_pairs]
+
         self.transform = transform
-        self.zip_paths = image_zip_list
-        self.zips = [zipfile.ZipFile(p, 'r') for p in image_zip_list]  
+        self.zip_paths = valid_image_zip_list
+        self.zips = [zipfile.ZipFile(p, 'r') for p in valid_image_zip_list]  
         self.metadata = pd.DataFrame()
 
-        for i, df in enumerate(metadata_list):
+        for i, df in enumerate(valid_metadata_list):
             df = df.copy()
             df['zip_index'] = i  
             self.metadata = pd.concat([self.metadata, df], ignore_index=True)
@@ -200,7 +210,12 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
     path = os.path.join(project_dir, rf'{path_folder}')
     images = rf'{path}/{images_dir}'
     metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
-    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
+
+    if len(metadata) == 0:
+            print(f"Warning: Dataset {path_folder} has no samples for the specified diagnoses. Skipping...")
+            return None, None, None, None
 
     try:
         metadata_train, metadata_test = train_test_split(

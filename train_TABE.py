@@ -100,6 +100,7 @@ fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
 fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 
 conditions_mapping = train_set.diagnose_encoder.categories_[0]
+num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
 batch_size = 32
@@ -129,13 +130,8 @@ test_dataloader = torch.utils.data.DataLoader(
 ### MODEL LOADING ###
 
 model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
-model_classifier = ClassificationHead(out_dim=8, in_ch=model_encoder.in_ch)
+model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
 model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
-
-optimizer = torch.optim.SGD(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
-                            lr=0.001, momentum=0.9, weight_decay=1e-4)
-optimizer_confusion = torch.optim.SGD(model_encoder.parameters(), lr=0.001, momentum=0.9)  
-optimizer_aux = torch.optim.SGD(model_aux.parameters(), lr=0.001, momentum=0.9) 
 
 optimizer = torch.optim.Adam(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
                             lr=0.001)
@@ -145,7 +141,7 @@ optimizer_aux = torch.optim.Adam(model_aux.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 criterion_aux = nn.CrossEntropyLoss()
 
-alpha = 0.5  
+alpha = 0.8
 GRL = True  
 
 model = nn.Sequential(

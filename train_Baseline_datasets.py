@@ -157,12 +157,45 @@ balancer_strategy = 'diagnostic'  # or 'both'
 batch_size = 64
 lr = 0.001
 num_epochs = 10
-num_classes = 8
 
 
 ### RUN EXPERIMENTS FOR ALL DATASET COMBINATIONS ###
 
+# Check which datasets are empty after loading
+empty_datasets = []
+if pad_metadata_train is None:
+    empty_datasets.append('PADUFES')
+if scin_metadata_train is None:
+    empty_datasets.append('SCIN')
+if fitz17_metadata_train is None:
+    empty_datasets.append('Fitz')
+if dermie_metadata_train is None:
+    empty_datasets.append('Dermie')
+if india_metadata_train is None:
+    empty_datasets.append('India')
+
+
+# Filter out redundant combinations
+combinations_to_skip = []
+if 'PADUFES' in empty_datasets:
+    combinations_to_skip.append('Minus_PADUFES')
+if 'SCIN' in empty_datasets:
+    combinations_to_skip.append('Minus_SCIN')
+if 'Fitz' in empty_datasets:
+    combinations_to_skip.append('Minus_Fitz')
+if 'Dermie' in empty_datasets:
+    combinations_to_skip.append('Minus_Dermie')
+if 'India' in empty_datasets:
+    combinations_to_skip.append('Minus_India')
+
+
+
 for combo_name, combo_data in dataset_combinations.items():
+    
+    if combo_name in combinations_to_skip:
+        print(f"Skipping {combo_name} - would be identical to 'All' since that dataset is empty")
+        continue
+
     print(f"\n{'='*50}")
     print(f"Running experiment: {combo_name}")
     print(f"Datasets: {combo_data['description']}")
@@ -205,6 +238,7 @@ for combo_name, combo_data in dataset_combinations.items():
     fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset', combo_name)
     
     conditions_mapping = train_set.diagnose_encoder.categories_[0]
+    num_conditions = len(conditions_mapping)
     
     # Create data loaders
     train_sampler = BalanceSampler(train_set, choice=balancer_strategy)
@@ -236,7 +270,7 @@ for combo_name, combo_data in dataset_combinations.items():
     print("Initializing model...")
     model = models.resnet152(weights='IMAGENET1K_V1')
     model.fc = torch.nn.Sequential(
-        torch.nn.Linear(model.fc.in_features, num_classes),
+        torch.nn.Linear(model.fc.in_features, num_conditions),
     )
     
     # Freeze layers except layer4 and fc

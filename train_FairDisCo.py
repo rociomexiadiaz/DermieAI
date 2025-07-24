@@ -97,6 +97,7 @@ fig_train_path = save_plot_and_return_path(fig_train, 'Train_dataset')
 fig_test_path = save_plot_and_return_path(fig_test, 'Test_dataset')
 
 conditions_mapping = train_set.diagnose_encoder.categories_[0]
+num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
 batch_size = 64
@@ -124,7 +125,7 @@ test_dataloader = torch.utils.data.DataLoader(
 
 ### MODEL LOADING ###
 
-model = Network(output_size=[1,8])
+model = Network(output_size=[1,num_conditions])
 model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
 loss_path = save_plot_and_return_path(fig, 'losses')
 

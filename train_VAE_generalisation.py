@@ -141,6 +141,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     experiment_data['Test Dataset Visualisation'] = fig_test_path
 
     conditions_mapping = train_set.diagnose_encoder.categories_[0]
+    num_conditions = len(conditions_mapping)
 
     balancer_strategy = 'diagnostic' # or 'both'
     batch_size = 32
@@ -169,7 +170,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
     ### MODEL LOADING ###
 
-    model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=8)
+    model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=num_conditions)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     resampler = AdaptiveResampler()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
