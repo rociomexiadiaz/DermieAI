@@ -3,7 +3,7 @@ import torchvision.transforms as transforms
 import torch
 from FairDisCo import *
 from TestFunction import *
-from metricsFunctions2 import *
+from metricsFunctions import *
 import datetime
 import matplotlib.pyplot as plt
 from xai import *

@@ -4,7 +4,7 @@ import torch
 from torchvision import models
 from VAE import *
 from TestFunction import *
-from metricsFunctions2 import *
+from metricsFunctions import *
 import matplotlib.pyplot as plt
 from xai import *
 import datetime
