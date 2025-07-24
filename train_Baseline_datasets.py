@@ -320,6 +320,10 @@ for combo_name, combo_data in dataset_combinations.items():
             stratified_balanced_accuracy()
         )
 
+        # Summarize metrics
+        summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
+        experiment_data['Metrics'] = '\n'.join(summary)
+
     else:
         metrics = test_model(
         model,
@@ -335,10 +339,12 @@ for combo_name, combo_data in dataset_combinations.items():
         balanced_accuracy(),
         stratified_balanced_accuracy()
     )
+        
+        # Summarize metrics
+        summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1])
+        experiment_data['Metrics'] = '\n'.join(summary)
     
-    # Summarize metrics
-    summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
-    experiment_data['Metrics'] = '\n'.join(summary)
+    
     
      
     # Model explanation (GradCAM)

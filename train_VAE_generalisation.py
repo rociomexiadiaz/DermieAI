@@ -203,6 +203,10 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
             stratified_balanced_accuracy()
         )
 
+        # Summarize metrics
+        summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
+        experiment_data['Metrics'] = '\n'.join(summary)
+
     else:
         metrics = test_model(
         model,
@@ -218,10 +222,10 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
         balanced_accuracy(),
         stratified_balanced_accuracy()
     )
-
-
-    summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
-    experiment_data['Metrics'] = '\n'.join(summary)
+        
+        # Summarize metrics
+        summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1])
+        experiment_data['Metrics'] = '\n'.join(summary)
 
 
     ### MODEL EXPLANATION ###
