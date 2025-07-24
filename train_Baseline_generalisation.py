@@ -203,20 +203,39 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     loss_path = save_plot_and_return_path(fig, f'{test_name}_losses')
     experiment_data['Loss Curve'] = loss_path
 
-    metrics = test_model(
+
+    if num_conditions > 5:
+        metrics = test_model(
+            model,
+            test_dataloader,
+            device,
+            multi_k_accuracy([1, 3, 5]),
+            multi_k_sensitivity([1, 3, 5]),
+            stratified_multi_k_accuracy([1, 3, 5]),
+            stratified_multi_k_sensitivity([1, 3, 5]),
+            enhanced_misclassified_samples(),
+            f1_score_metric(),
+            stratified_f1_score(),
+            balanced_accuracy(),
+            stratified_balanced_accuracy()
+        )
+
+    else:
+         metrics = test_model(
         model,
         test_dataloader,
         device,
-        multi_k_accuracy([1, 3, 5]),
-        multi_k_sensitivity([1, 3, 5]),
-        stratified_multi_k_accuracy([1, 3, 5]),
-        stratified_multi_k_sensitivity([1, 3, 5]),
+        multi_k_accuracy([1]),
+        multi_k_sensitivity([1]),
+        stratified_multi_k_accuracy([1]),
+        stratified_multi_k_sensitivity([1]),
         enhanced_misclassified_samples(),
         f1_score_metric(),
         stratified_f1_score(),
         balanced_accuracy(),
         stratified_balanced_accuracy()
     )
+
 
     summary = summarise_enhanced_metrics(metrics, conditions_mapping, k_values=[1, 3, 5])
     experiment_data['Metrics'] = '\n'.join(summary)
