@@ -9,7 +9,10 @@ import zipfile
 import io
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import open_clip
+import torchvision.transforms as transforms
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def clean_metadata(pd_metadata: pd.DataFrame, images_dir):
 
@@ -76,13 +79,16 @@ def BalanceSampler(dataset, choice='diagnostic'):
 
 
 class MultipleDatasets(Dataset):
-    def __init__(self, metadata_list, image_zip_list, transform=None, diagnostic_encoder=None):
+    def __init__(self, metadata_list, image_zip_list, transform=None, diagnostic_encoder=None, clip=False, apply_augment=False):
         """
         Args:
             metadata_list (list of pd.DataFrame): List of metadata DataFrames.
             image_zip_list (list of str): List of paths to image ZIP files (same order as metadata).
             transform (callable, optional): Optional transform to be applied on a sample.
         """
+        self.clip = clip
+        self.apply_augment = apply_augment
+
         assert len(metadata_list) == len(image_zip_list), "Metadata and image zip lists must be the same length"
         
         valid_pairs = [(metadata, zip_path) for metadata, zip_path in zip(metadata_list, image_zip_list) 
@@ -123,6 +129,12 @@ class MultipleDatasets(Dataset):
             self.diagnose_encoder = diagnostic_encoder
             self.diagnostic = self.diagnose_encoder.transform(
                 self.metadata['Diagnosis'].values.reshape(-1, 1)).toarray()
+            
+        if self.clip:
+            self.lesion_clip_model, _, self.lesion_clip_preprocess = open_clip.create_model_and_transforms("hf-hub:yyupenn/whylesionclip")
+            global device
+            self.lesion_clip_model.to(device)
+            self.lesion_clip_model.eval()
 
     def __len__(self):
         return len(self.metadata)
@@ -142,8 +154,23 @@ class MultipleDatasets(Dataset):
             print(f"Error loading image {img_name} from zip {self.zip_paths[zip_idx]}: {e}")
             image = Image.new('RGB', (224, 224), color='white')
 
-        if self.transform:
-            image = self.transform(image)
+
+        if self.clip: 
+            if self.apply_augment:
+                transformations = transforms.Compose([
+                        transforms.RandomAffine(degrees=10, shear= (-10,10,-10,10))])
+                image = transformations(image)
+
+            image = self.lesion_clip_preprocess(image).unsqueeze(0).to(device)
+    
+            with torch.no_grad():
+                image = self.lesion_clip_model.encode_image(image)
+        
+            image /= image.norm(dim=-1, keepdim=True)
+
+        else:
+            if self.transform:
+                image = self.transform(image)
 
         fst = torch.tensor(self.fst_labels[idx], dtype=torch.float)
         diagnosis = torch.tensor(self.diagnostic[idx], dtype=torch.float)
