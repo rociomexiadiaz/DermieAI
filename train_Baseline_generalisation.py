@@ -187,7 +187,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.BCEWithLogitsLoss()
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2], gamma=0.1) #For the India dataset
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2,3], gamma=0.1) #For the India dataset
 
     model, fig = train_model(
         model,

@@ -170,7 +170,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     ### MODEL LOADING ###
 
     model = Network(output_size=[1,num_conditions])
-    model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=20)
+    model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
     
     loss_path = save_plot_and_return_path(fig, f'{test_name}_losses')
     experiment_data['Loss Curve'] = loss_path

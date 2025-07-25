@@ -170,15 +170,15 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
     model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 
-    optimizer = torch.optim.SGD(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
-                                lr=0.001, momentum=0.9, weight_decay=1e-4)
-    optimizer_confusion = torch.optim.SGD(model_encoder.parameters(), lr=0.001, momentum=0.9)  # Defining confusion optimiser (boosted encoder optimiser)
-    optimizer_aux = torch.optim.SGD(model_aux.parameters(), lr=0.001, momentum=0.9)  # defining auxiliary classification optimiser
+    optimizer = torch.optim.Adam(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
+                                lr=0.001)
+    optimizer_confusion = torch.optim.Adam(model_encoder.parameters(), lr=0.001)  
+    optimizer_aux = torch.optim.Adam(model_aux.parameters(), lr=0.001) 
 
     criterion = nn.CrossEntropyLoss()
     criterion_aux = nn.CrossEntropyLoss()
 
-    alpha = 0.5  
+    alpha = 0.8  
     GRL = True  
 
     model = nn.Sequential(
