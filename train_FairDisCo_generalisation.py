@@ -7,6 +7,8 @@ from metricsFunctions import *
 import matplotlib.pyplot as plt
 from xai import *
 
+clip_fe = False
+
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
@@ -111,7 +113,8 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test)
 
     #CLIP
-    #test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
+    if clip_fe:
+        test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
 
     # Train and Val
     train_metadatas, train_images = [], []
@@ -132,8 +135,9 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
     #CLIP
-    #train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
-    #val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    if clip_fe:
+        train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
+        val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
     fig_train = visualise(train_set)
     fig_test = visualise(test_set)
@@ -175,7 +179,20 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
     ### MODEL LOADING ###
 
+    class FC(nn.Module):
+        def __init__(self, input_dim=768, output_dim=num_conditions):
+            super(FC, self).__init__()
+            self.fc = nn.Linear(input_dim, output_dim)  
+
+        def forward(self, x):
+            return self.fc(x)
+
     model = Network(output_size=[1,num_conditions])
+
+    #CLIP
+    if clip_fe:
+        model = Network(output_size=[1,num_conditions], clip=FC())
+
     model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
     
     loss_path = save_plot_and_return_path(fig, f'{test_name}_losses')
@@ -229,8 +246,6 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
 
     ### MODEL EXPLANATION ###
-    #CLIP
-    clip_fe = False
 
     if not clip_fe:
         model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')

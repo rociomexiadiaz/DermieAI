@@ -17,7 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ### MODEL + LOSSES ###
 
 class Network(torch.nn.Module):
-    def __init__(self, output_size=[1,6], weights='IMAGENET1K_V1'): 
+    def __init__(self, output_size=[1,6], weights='IMAGENET1K_V1', clip=None): 
         '''
         output_size: list first is skin type, second is condition
         '''
@@ -30,6 +30,9 @@ class Network(torch.nn.Module):
                 param.requires_grad = True
             else:
                 param.requires_grad = False
+
+        if clip is not None:
+            self.feature_extractor = clip
                 
         num_ftrs = self.feature_extractor.fc.in_features
         self.feature_extractor.fc = nn.Linear(num_ftrs, bottle_neck)

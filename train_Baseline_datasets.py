@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from xai import *
 import copy
 
+clip_fe = False
+
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
@@ -232,11 +234,12 @@ for combo_name, combo_data in dataset_combinations.items():
 
     
     # CLIP
-    #train_set = MultipleDatasets(combo_data['train'], combo_data['images'], transform=transformations, clip=True, apply_augment=True) 
-    #val_set = MultipleDatasets(combo_data['val'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
-    #test_set = MultipleDatasets(combo_data['test'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    if clip_fe:
+        train_set = MultipleDatasets(combo_data['train'], combo_data['images'], transform=transformations, clip=True, apply_augment=True) 
+        val_set = MultipleDatasets(combo_data['val'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+        test_set = MultipleDatasets(combo_data['test'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
-    
+        
     # Visualize datasets
     fig_train = visualise(train_set)
     fig_test = visualise(test_set)
@@ -296,7 +299,8 @@ for combo_name, combo_data in dataset_combinations.items():
             return self.fc(x)
   
     # CLIP
-    #model = FC()
+    if clip_fe:
+        model = FC()
     
     # Move model to device
     model = model.to(device)

@@ -8,6 +8,8 @@ from metricsFunctions import *
 import matplotlib.pyplot as plt
 from xai import *
 
+clip_fe = False
+
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
@@ -110,7 +112,8 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test)
 
     #CLIP
-    #test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
+    if clip_fe:
+        test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
 
     # Train and Val
     train_metadatas, train_images = [], []
@@ -131,8 +134,9 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
     #CLIP
-    #train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
-    #val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    if clip_fe:
+        train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
+        val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
     fig_train = visualise(train_set)
     fig_test = visualise(test_set)
@@ -184,7 +188,8 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
       
     # CLIP
-    #model_encoder = FC()
+    if clip_fe:
+        model_encoder = FC()
     
     model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
     model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
@@ -274,8 +279,6 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
 
     ### MODEL EXPLANATION ###
-    #CLIP
-    clip_fe = False
 
     if not clip_fe:
         model_gradCAM = UniversalGrad(model, '0.enet.layer4.2.conv3')

@@ -8,6 +8,8 @@ import datetime
 import matplotlib.pyplot as plt
 from xai import *
 
+clip_fe = False
+
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
@@ -91,9 +93,10 @@ val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata
 test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 # CLIP
-#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations, clip=True, apply_augment=True) 
-#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
-#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+if clip_fe:
+    train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations, clip=True, apply_augment=True) 
+    val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
@@ -129,8 +132,20 @@ test_dataloader = torch.utils.data.DataLoader(
 )
 
 ### MODEL LOADING ###
+class FC(nn.Module):
+    def __init__(self, input_dim=768, output_dim=num_conditions):
+        super(FC, self).__init__()
+        self.fc = nn.Linear(input_dim, output_dim)  
+
+    def forward(self, x):
+        return self.fc(x)
 
 model = Network(output_size=[1,num_conditions])
+
+#CLIP
+if clip_fe:
+    model = Network(output_size=[1,num_conditions], clip=FC())
+
 model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
 loss_path = save_plot_and_return_path(fig, 'losses')
 
@@ -181,9 +196,6 @@ else:
 
 
 ### MODEL EXPLANATION ###
-
-#CLIP
-clip_fe = False
 
 if not clip_fe:
     model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')

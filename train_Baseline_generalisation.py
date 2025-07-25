@@ -8,6 +8,8 @@ from TestFunction import *
 import matplotlib.pyplot as plt
 from xai import *
 
+clip_fe = False
+
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
@@ -110,7 +112,8 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test)
 
     #CLIP
-    #test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
+    if clip_fe:
+        test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
 
 
     # Train and Val
@@ -132,8 +135,9 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
     #CLIP
-    #train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
-    #val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    if clip_fe:
+        train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
+        val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
     fig_train = visualise(train_set)
     fig_test = visualise(test_set)
@@ -195,7 +199,8 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
             return self.fc(x)
   
     # CLIP
-    #model = FC()
+    if clip_fe:
+        model = FC()
 
     ### MODEL TRAINING AND TESTING ###
 
@@ -263,9 +268,6 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
 
     ### MODEL EXPLANATION ###
-
-    #CLIP
-    clip_fe = False
 
     if not clip_fe:
         model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
