@@ -229,6 +229,13 @@ for combo_name, combo_data in dataset_combinations.items():
         transform=transformations_val_test, 
         diagnostic_encoder=train_set.diagnose_encoder
     )
+
+    
+    # CLIP
+    #train_set = MultipleDatasets(combo_data['train'], combo_data['images'], transform=transformations, clip=True, apply_augment=True) 
+    #val_set = MultipleDatasets(combo_data['val'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    #test_set = MultipleDatasets(combo_data['test'], combo_data['images'], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+
     
     # Visualize datasets
     fig_train = visualise(train_set)
@@ -279,6 +286,17 @@ for combo_name, combo_data in dataset_combinations.items():
             param.requires_grad = True
         else:
             param.requires_grad = False
+
+    class FC(nn.Module):
+        def __init__(self, input_dim=768, output_dim=num_conditions):
+            super(FC, self).__init__()
+            self.fc = nn.Linear(input_dim, output_dim)  
+
+        def forward(self, x):
+            return self.fc(x)
+  
+    # CLIP
+    #model = FC()
     
     # Move model to device
     model = model.to(device)
@@ -345,8 +363,6 @@ for combo_name, combo_data in dataset_combinations.items():
         experiment_data['Metrics'] = '\n'.join(summary)
     
     
-    
-     
     # Model explanation (GradCAM)
     print("Generating GradCAM visualizations...")
     try:

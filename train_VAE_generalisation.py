@@ -112,6 +112,9 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     test_metadata = pd.concat([test_train, test_val, test_test], ignore_index=True)
     test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test)
 
+    #CLIP
+    #test_set = MultipleDatasets([test_metadata], [test_images], transform=transformations_val_test, clip=True, apply_augment=False)
+
     # Train and Val
     train_metadatas, train_images = [], []
     val_metadatas, val_images = [], []
@@ -130,6 +133,9 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
     train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations)
     val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
+    #CLIP
+    #train_set = MultipleDatasets(train_metadatas, train_images, transform=transformations, clip=True, apply_augment=True)
+    #val_set = MultipleDatasets(val_metadatas, val_images, transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
     fig_train = visualise(train_set)
     fig_test = visualise(test_set)
@@ -169,8 +175,19 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
 
     ### MODEL LOADING ###
+    class FC(nn.Module):
+        def __init__(self, input_dim=768, output_dim=256):
+            super(FC, self).__init__()
+            self.fc = nn.Linear(input_dim, output_dim)  
 
+        def forward(self, x):
+            return self.fc(x)
+  
     model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=num_conditions)
+
+    # CLIP
+    #model = VAEmodel(encoder=FC(), num_classes=num_conditions)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     resampler = AdaptiveResampler(alpha=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
@@ -229,10 +246,13 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
 
     ### MODEL EXPLANATION ###
+    #CLIP
+    clip_fe = False
 
-    model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')
-    model_gradCAM.eval()
-    heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
+    if not clip_fe:
+        model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')
+        model_gradCAM.eval()
+        heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
     
     fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
     grad_cam_path = save_plot_and_return_path(fig, f'{test_name}_gradCAM')

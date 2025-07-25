@@ -235,12 +235,16 @@ else:
 
 ### MODEL EXPLANATION ###
 
-model_gradCAM = UniversalGrad(model, '0.enet.layer4.2.conv3')
-model_gradCAM.eval()
-heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
-fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
-grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
-experiment_data['GradCAM Plot Path'] = grad_cam_path
+#CLIP
+clip_fe = False
+
+if not clip_fe:
+    model_gradCAM = UniversalGrad(model, '0.enet.layer4.2.conv3')
+    model_gradCAM.eval()
+    heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
+    fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
+    grad_cam_path = save_plot_and_return_path(fig, 'gradCAM')
+    experiment_data['GradCAM Plot Path'] = grad_cam_path
 
 
 ### SAVE RESULTS ###
