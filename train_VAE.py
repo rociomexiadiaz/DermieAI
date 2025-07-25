@@ -157,7 +157,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
 
 ### MODEL TRAINING AND TESTING ###
 
-model, fig = train_VAE(model, train_dataloader, val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=30)
+model, fig = train_VAE(model, train_dataloader, val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=20)
 loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(

@@ -200,7 +200,7 @@ for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(da
 
     ### MODEL TRAINING AND TESTING ###
 
-    model, fig = train_VAE(model, train_dataloader, val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=30)
+    model, fig = train_VAE(model, train_dataloader, val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=20)
     loss_path = save_plot_and_return_path(fig, f'{test_name}_losses')
     experiment_data['Loss Curve'] = loss_path
 
