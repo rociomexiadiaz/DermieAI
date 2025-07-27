@@ -102,6 +102,23 @@ datasets = [
     ('india', india_metadata_train, india_metadata_val, india_metadata_test, images_india),
 ]
 
+empty_datasets = []
+filtered_datasets = []
+
+for name, train_meta, val_meta, test_meta, images in datasets:
+    # Check if all splits are None or empty
+    train_empty = train_meta is None or len(train_meta) == 0
+    val_empty = val_meta is None or len(val_meta) == 0
+    test_empty = test_meta is None or len(test_meta) == 0
+    
+    if train_empty and val_empty and test_empty:
+        empty_datasets.append(name)
+        print(f"Skipping {name} dataset - all splits are empty")
+    else:
+        filtered_datasets.append((name, train_meta, val_meta, test_meta, images))
+
+datasets = filtered_datasets
+
 for i, (test_name, test_train, test_val, test_test, test_images) in enumerate(datasets):
     print(f'\n=== Running fold with {test_name} as test set ===')
 

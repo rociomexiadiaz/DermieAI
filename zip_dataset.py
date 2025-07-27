@@ -239,15 +239,15 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
     metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
 
     ### 8 Conditions ###
-    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
     
     ### Acne Eczema Psoriasis ###
     #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
 
     ### Cancer vs Non-Cancer ###
-    cancer_conditions = ['melanoma', 'bcc', 'scc']
-    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
-    metadata['Diagnosis'] = metadata['Diagnosis'].apply( lambda x: 'Cancer' if x in cancer_conditions else 'Non_Cancer' )
+    #cancer_conditions = ['melanoma', 'bcc', 'scc']
+    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+    #metadata['Diagnosis'] = metadata['Diagnosis'].apply( lambda x: 'Cancer' if x in cancer_conditions else 'Non_Cancer' )
 
     if len(metadata) == 0:
             print(f"Warning: Dataset {path_folder} has no samples for the specified diagnoses. Skipping...")
