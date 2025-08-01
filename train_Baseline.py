@@ -155,16 +155,13 @@ class FC(nn.Module):
         self.fc = nn.Linear(input_dim, output_dim) 
         self.in_ch = input_dim
 
-    def forward(self, x):
-        if x.dim() == 3 and x.size(1) == 1:
-            x = x.squeeze(1)  
-        
+    def forward(self, x):       
         return self.fc(x) 
   
 
 # CLIP
 if clip_fe:
-    model = FC()
+    model = FC(output_dim=num_conditions)
 
 ### MODEL TRAINING AND TESTING ###
 

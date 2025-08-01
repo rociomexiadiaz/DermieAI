@@ -141,20 +141,19 @@ class FC(nn.Module):
     def __init__(self, input_dim=768, output_dim=256):
         super(FC, self).__init__()
         self.fc = nn.Linear(input_dim, output_dim) 
-        self.in_ch = input_dim
+        self.in_ch = output_dim  
 
     def forward(self, x):
         if x.dim() == 3 and x.size(1) == 1:
             x = x.squeeze(1)  
-        
         return self.fc(x) 
   
-
-model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
 
 # CLIP
 if clip_fe:
     model_encoder = FC()
+else:
+    model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
 
 model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
 model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)

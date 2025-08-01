@@ -138,7 +138,7 @@ class AdaptiveResampler:
         return weights
     
 
-def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=0.5, c3=0.01):
+def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=0.5, c3=0.01, use_clip=False):
     """
     Combined loss function for DB-VAE:
     - Classification loss (cross-entropy)
@@ -150,7 +150,11 @@ def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=0.5, c3=0.01):
     classification_loss = class_criterion(y_pred, y_true)
     
     # Reconstruction loss
-    reconstruction_loss = F.mse_loss(x_recon, x, reduction='mean')
+    if use_clip:
+        reconstruction_loss = torch.tensor(0.0, device=y_pred.device)
+        c2 = 0.0  # Disable reconstruction weight
+    else:
+        reconstruction_loss = F.mse_loss(x_recon, x, reduction='mean')
     
     # KL divergence loss
     kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / x.size(0)
@@ -161,7 +165,7 @@ def vae_loss(x_recon, x, mu, logvar, y_pred, y_true, c1=1.0, c2=0.5, c3=0.01):
     return total_loss, classification_loss, reconstruction_loss, kl_loss
 
 
-def train_epoch(model, loader, optimizer, scheduler, resampler, device):
+def train_epoch(model, loader, optimizer, scheduler, resampler, device, use_clip=False):
 
     model.to(device)
     model.train()
@@ -200,7 +204,7 @@ def train_epoch(model, loader, optimizer, scheduler, resampler, device):
         x_recon, mu, logvar, y_pred, z = model(data)
         
         loss, class_loss, recon_loss, kl_loss = vae_loss(
-            x_recon, data, mu, logvar, y_pred, target
+            x_recon, data, mu, logvar, y_pred, target, use_clip=use_clip
         )
         
         loss.backward()
@@ -216,7 +220,7 @@ def train_epoch(model, loader, optimizer, scheduler, resampler, device):
 
     return epoch_loss, epoch_class_loss, epoch_recon_loss, epoch_kl_loss
 
-def val_epoch(model, loader, device):
+def val_epoch(model, loader, device, use_clip=False):
 
     model.eval()
     val_loss = 0
@@ -229,7 +233,7 @@ def val_epoch(model, loader, device):
             target = target.to(device)
             
             x_recon, mu, logvar, y_pred, z = model(data)
-            loss, _, _, _ = vae_loss(x_recon, data, mu, logvar, y_pred, target)
+            loss, _, _, _ = vae_loss(x_recon, data, mu, logvar, y_pred, target, use_clip=use_clip)
             
             val_loss += loss.item()
             _, predicted = torch.max(y_pred.data, 1)
@@ -239,7 +243,7 @@ def val_epoch(model, loader, device):
     return val_loss
 
 
-def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, num_epochs, device):
+def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, num_epochs, device, use_clip=False):
 
     model.to(device)
 
@@ -256,8 +260,8 @@ def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, 
 
     for epoch in range(num_epochs):
 
-        train_loss, train_class_loss, train_recon_loss, train_kl_loss = train_epoch(model, train_loader, optimizer, scheduler, resampler, device)
-        val_loss = val_epoch(model, val_loader, device)
+        train_loss, train_class_loss, train_recon_loss, train_kl_loss = train_epoch(model, train_loader, optimizer, scheduler, resampler, device, use_clip=use_clip)
+        val_loss = val_epoch(model, val_loader, device, use_clip=use_clip)
 
         print(f'Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
 
