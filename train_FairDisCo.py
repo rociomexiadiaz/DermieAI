@@ -8,11 +8,12 @@ import datetime
 import matplotlib.pyplot as plt
 from xai import *
 
-clip_fe = False
+clip_fe = True
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
+torch.cuda.empty_cache()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

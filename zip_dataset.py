@@ -239,10 +239,13 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
     metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
 
     ### 8 Conditions ###
-    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
+    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'melanoma', 'acne', 'melanocytic nevus', 'eczema', 'scc', 'bcc', 'urticaria'])]
     
     ### Acne Eczema Psoriasis ###
     #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
+
+    ### Eczema Psoriasis ###
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'eczema'])]
 
     ### Cancer vs Non-Cancer ###
     #cancer_conditions = ['melanoma', 'bcc', 'scc']

@@ -9,7 +9,7 @@ import datetime
 import matplotlib.pyplot as plt
 from xai import *
 
-clip_fe = False
+clip_fe = True
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
@@ -146,11 +146,12 @@ class FC(nn.Module):
         return self.fc(x)
   
 
+model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
+
 # CLIP
 if clip_fe:
     model_encoder = FC()
 
-model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
 model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
 model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 

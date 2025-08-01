@@ -15,6 +15,10 @@ def train_epoch(model, train_loader, optimizer, criterion, device):
         
         optimizer.zero_grad()
         outputs = model(images)
+
+        if outputs.dim() > 2:
+            outputs = outputs.squeeze(1)
+
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -38,6 +42,10 @@ def validate_epoch(model, val_loader, criterion, device):
             labels = batch['diagnosis'].to(device) 
             
             outputs = model(images)
+
+            if outputs.dim() > 2:
+                outputs = outputs.squeeze(1)
+
             loss = criterion(outputs, labels)
             
             epoch_loss += loss.item()
