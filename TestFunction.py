@@ -19,6 +19,12 @@ def test_model(model, test_loader, device, *metrics_functions):
             
             outputs = model(images)   
 
+            while outputs.dim() > 2:
+                if outputs.size(1) == 1:
+                    outputs = outputs.squeeze(1)
+                else:
+                    break
+
             total_outputs.append(outputs)
             total_labels.append(labels)
             total_fst.append(fst)

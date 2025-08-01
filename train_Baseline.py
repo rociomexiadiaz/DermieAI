@@ -150,12 +150,16 @@ for name, param in model.named_parameters():
 
 
 class FC(nn.Module):
-    def __init__(self, input_dim=768, output_dim=num_conditions):
+    def __init__(self, input_dim=768, output_dim=256):
         super(FC, self).__init__()
-        self.fc = nn.Linear(input_dim, output_dim)  
+        self.fc = nn.Linear(input_dim, output_dim) 
+        self.in_ch = input_dim
 
     def forward(self, x):
-        return self.fc(x)
+        if x.dim() == 3 and x.size(1) == 1:
+            x = x.squeeze(1)  
+        
+        return self.fc(x) 
   
 
 # CLIP

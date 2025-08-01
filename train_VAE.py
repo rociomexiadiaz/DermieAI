@@ -140,6 +140,7 @@ class FC(nn.Module):
     def __init__(self, input_dim=768, output_dim=256):
         super(FC, self).__init__()
         self.fc = nn.Linear(input_dim, output_dim) 
+        self.in_ch = input_dim
 
     def forward(self, x):
         if x.dim() == 3 and x.size(1) == 1:
