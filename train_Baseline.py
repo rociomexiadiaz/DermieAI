@@ -8,7 +8,7 @@ from TestFunction import *
 import matplotlib.pyplot as plt
 from xai import *
 
-clip_fe = True
+clip_fe = False
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
@@ -48,19 +48,19 @@ dermie_metadata_train, dermie_metadata_test, dermie_metadata_val, images_dermie 
 pad_metadata_train, pad_metadata_test, pad_metadata_val, images_pad = load_dataset(project_dir=project_dir,
                                                                                    path_folder=r'Data/padufes', 
                                                                                    images_dir='padufes_images.zip',
-                                                                                   metadata_dir='padufes_metadata_clean.csv',
+                                                                                   metadata_dir='padufes_metadata_new.csv',
                                                                                    stratification_strategy=stratification_strategy)
 
 scin_metadata_train, scin_metadata_test, scin_metadata_val, images_scin = load_dataset(project_dir=project_dir,
                                                                                        path_folder=r'Data/scin', 
                                                                                        images_dir='scin_images.zip',
-                                                                                       metadata_dir='scin_metadata_clean.csv',
+                                                                                       metadata_dir='scin_metadata_new.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
 fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 = load_dataset(project_dir=project_dir,
                                                                                        path_folder=r'Data/fitz17k', 
                                                                                        images_dir='fitzpatrick17k_images.zip',
-                                                                                       metadata_dir='fitzpatrick17k_metadata_clean.csv',
+                                                                                       metadata_dir='fitzpatrick17k_metadata_new.csv',
                                                                                        stratification_strategy=stratification_strategy)
 
 india_metadata_train, india_metadata_test, india_metadata_val, images_india = load_dataset(project_dir=project_dir,
@@ -89,9 +89,13 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
+#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+
+train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations) 
+val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 # CLIP
 if clip_fe:
