@@ -77,9 +77,12 @@ experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k + India'
 transformations = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),  
+    transforms.RandomAffine(degrees=30, shear= (-10,10,-10,10)), # 30 instead of 10
+    transforms.ColorJitter(brightness=0.1), # NEW 
+    transforms.RandomHorizontalFlip(p=0.5), # NEW
+    transforms.RandomVerticalFlip(p=0.2), # NEW
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
-    transforms.RandomAffine(degrees=10, shear= (-10,10,-10,10)),
 ])
 
 transformations_val_test = transforms.Compose([
@@ -131,7 +134,7 @@ val_dataloader = torch.utils.data.DataLoader(
 )
 test_dataloader = torch.utils.data.DataLoader(
     test_set,
-    batch_size=64,
+    batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
@@ -142,11 +145,12 @@ test_dataloader = torch.utils.data.DataLoader(
 model = models.resnet152(weights='IMAGENET1K_V1')
 
 model.fc = torch.nn.Sequential(
+    #torch.nn.Dropout(0.1), # NEW 
     torch.nn.Linear(model.fc.in_features, num_conditions),
+    
 )
 
 for name, param in model.named_parameters():
-    #if 'fc' in name:
     if 'layer4' in name or 'fc' in name:
         param.requires_grad = True
     else:
@@ -174,7 +178,6 @@ num_epochs = 10
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 criterion = torch.nn.BCEWithLogitsLoss()
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [2,3], gamma=0.1) #For the India dataset
 
 model, fig = train_model(
     model,

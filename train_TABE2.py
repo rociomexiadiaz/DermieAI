@@ -2,24 +2,24 @@ from zip_dataset import *
 import torchvision.transforms as transforms
 import torch
 from torchvision import models
-from VAE import *
+from TABE import *
 from TestFunction import *
 from metricsFunctions import *
+import datetime
 import matplotlib.pyplot as plt
 from xai import *
-import datetime
 
-clip_fe = False
+clip_fe = True
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
-torch.manual_seed(0)
 torch.cuda.empty_cache()
+torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-os.makedirs('Logs', exist_ok=True)
-log_file = f"Logs/dermie_experiment_{experiment_timestamp}.txt"
+os.makedirs('LogsCLIP', exist_ok=True)
+log_file = f"LogsCLIP/dermie_experiment_{experiment_timestamp}.txt"
 
 def save_experiment_log(data, file_path=log_file):
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -27,7 +27,7 @@ def save_experiment_log(data, file_path=log_file):
             f.write(f"{key}: {value}\n")
 
 def save_plot_and_return_path(fig, filename_base):
-    filename = f"Logs/{filename_base}_{experiment_timestamp}.png"
+    filename = f"LogsCLIP/{filename_base}_{experiment_timestamp}.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filename
@@ -94,13 +94,13 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
-val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
+#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
-#train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations) 
-#val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-#test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations) 
+val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 # CLIP
 if clip_fe:
@@ -118,7 +118,7 @@ conditions_mapping = train_set.diagnose_encoder.categories_[0]
 num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
-batch_size = 32
+batch_size = 16 #32
 
 train_sampler = BalanceSampler(train_set, choice=balancer_strategy)
 
@@ -148,34 +148,64 @@ class FC(nn.Module):
     def __init__(self, input_dim=768, output_dim=256):
         super(FC, self).__init__()
         self.fc = nn.Linear(input_dim, output_dim) 
-        self.in_ch = input_dim
+        self.in_ch = output_dim  
 
     def forward(self, x):
         if x.dim() == 3 and x.size(1) == 1:
             x = x.squeeze(1)  
-        
-        return self.fc(x)  
+        return self.fc(x) 
   
-model = VAEmodel(encoder= models.resnet152(weights= "IMAGENET1K_V2"), num_classes=num_conditions)
 
 # CLIP
 if clip_fe:
-    model = VAEmodel(encoder=FC(), num_classes=num_conditions)
+    model_encoder = FC()
+else:
+    model_encoder = FeatureExtractor(enet=models.resnet152(weights="IMAGENET1K_V2"))
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-resampler = AdaptiveResampler(alpha=0.1)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15)
+model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encoder.in_ch)
+model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 
+optimizer = torch.optim.Adam(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
+                            lr=0.001) 
+optimizer_confusion = torch.optim.Adam(model_encoder.parameters(), lr=0.001)  
+optimizer_aux = torch.optim.Adam(model_aux.parameters(), lr=0.001) 
+
+criterion = nn.CrossEntropyLoss()
+criterion_aux = nn.CrossEntropyLoss()
+
+alpha = 0.1
+GRL = True  
+
+model = nn.Sequential(
+    model_encoder,
+    model_classifier,
+    model_classifier.activation)
 
 ### MODEL TRAINING AND TESTING ###
 
-model, fig = train_VAE(model, train_dataloader, val_dataloader, optimizer, scheduler, resampler, device=device, num_epochs=30, use_clip=clip_fe)
+model_encoder, model_classifier, model_aux, fig = train_model(
+    model_encoder=model_encoder, 
+    model_classifier=model_classifier, 
+    model_aux=model_aux,
+    train_loader=train_dataloader, 
+    val_loader=val_dataloader,
+    num_epochs=15, 
+    optimizer=optimizer, 
+    optimizer_aux=optimizer_aux, 
+    optimizer_confusion=optimizer_confusion,
+    criterion=criterion, 
+    criterion_aux=criterion_aux, 
+    device=device, 
+    alpha=alpha, 
+    GRL=GRL
+)
+
 loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(
-    model.encoder,
-    model.classifier,
-   )
+    model_encoder,
+    model_classifier,
+    model_classifier.activation)
 
 if num_conditions > 5:
     metrics = test_model(
@@ -221,7 +251,7 @@ else:
 ### MODEL EXPLANATION ###
 
 if not clip_fe:
-    model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')
+    model_gradCAM = UniversalGrad(model, '0.enet.layer4.2.conv3')
     model_gradCAM.eval()
     heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
     fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
@@ -234,3 +264,4 @@ if not clip_fe:
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
 save_experiment_log(experiment_data, file_path=log_file)
+

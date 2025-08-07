@@ -79,9 +79,12 @@ experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k + India'
 transformations = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),  
+    transforms.RandomAffine(degrees=30, shear= (-10,10,-10,10)), # 30 instead of 10
+    transforms.ColorJitter(brightness=0.1), # NEW
+    transforms.RandomHorizontalFlip(p=0.5), # NEW
+    transforms.RandomVerticalFlip(p=0.2), # NEW
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
-    transforms.RandomAffine(degrees=10, shear= (-10,10,-10,10)),
 ])
 
 transformations_val_test = transforms.Compose([
@@ -115,7 +118,7 @@ conditions_mapping = train_set.diagnose_encoder.categories_[0]
 num_conditions = len(conditions_mapping)
 
 balancer_strategy = 'diagnostic' # or 'both'
-batch_size = 32
+batch_size = 16 #32
 
 train_sampler = BalanceSampler(train_set, choice=balancer_strategy)
 
@@ -133,7 +136,7 @@ val_dataloader = torch.utils.data.DataLoader(
 )
 test_dataloader = torch.utils.data.DataLoader(
     test_set,
-    batch_size=64,
+    batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
@@ -163,14 +166,14 @@ model_classifier = ClassificationHead(out_dim=num_conditions, in_ch=model_encode
 model_aux = AuxiliaryHead(num_aux=6, in_ch=model_encoder.in_ch)
 
 optimizer = torch.optim.Adam(list(model_encoder.parameters()) + list(model_classifier.parameters()) + list(model_aux.parameters()),
-                            lr=0.001)
+                            lr=0.001) 
 optimizer_confusion = torch.optim.Adam(model_encoder.parameters(), lr=0.001)  
 optimizer_aux = torch.optim.Adam(model_aux.parameters(), lr=0.001) 
 
 criterion = nn.CrossEntropyLoss()
 criterion_aux = nn.CrossEntropyLoss()
 
-alpha = 0.8
+alpha = 0.1
 GRL = True  
 
 model = nn.Sequential(

@@ -77,9 +77,12 @@ experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k + India'
 transformations = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),  
+    transforms.RandomAffine(degrees=30, shear= (-10,10,-10,10)), # 30 instead of 10
+    transforms.ColorJitter(brightness=0.1), # NEW
+    transforms.RandomHorizontalFlip(p=0.5), # NEW
+    transforms.RandomVerticalFlip(p=0.2), # NEW
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
-    transforms.RandomAffine(degrees=10, shear= (-10,10,-10,10)),
 ])
 
 transformations_val_test = transforms.Compose([
@@ -131,7 +134,7 @@ val_dataloader = torch.utils.data.DataLoader(
 )
 test_dataloader = torch.utils.data.DataLoader(
     test_set,
-    batch_size=64,
+    batch_size=batch_size,
     shuffle=False,
     num_workers=0
 )
