@@ -233,26 +233,26 @@ def visualise(dataset: MultipleDatasets):
     return fig
 
 
-def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratification_strategy):
+def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratification_strategy, seed):
     path = os.path.join(project_dir, rf'{path_folder}')
     images = rf'{path}/{images_dir}'
     metadata = clean_metadata(pd.read_csv(rf'{path}/{metadata_dir}'), images)
 
   
     ### Acne Eczema Psoriasis ###
-    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
 
     ### Eczema Psoriasis ###
     #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'eczema'])]
 
     ### Cancer vs Non-Cancer ###
-    benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
-    malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
+    #benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
+    #malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
 
-    metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
-    metadata['Diagnosis'] = metadata['Diagnosis'].apply(
-        lambda x: 'Benign' if x in benign_conditions else 'Malignant'
-    )
+    #metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
+    #metadata['Diagnosis'] = metadata['Diagnosis'].apply(
+    #    lambda x: 'Benign' if x in benign_conditions else 'Malignant'
+    #)
 
 
     if len(metadata) == 0:
@@ -264,14 +264,14 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
             metadata,
             test_size=0.3,
             stratify=metadata[stratification_strategy],  
-            random_state=42
+            random_state=seed
         )
     except ValueError as e:
         metadata_train, metadata_test = train_test_split(
             metadata,
             test_size=0.3,
             shuffle=True,
-            random_state=42
+            random_state=seed
         )
 
     try:
@@ -279,14 +279,14 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
             metadata_test,
             test_size=0.4,
             stratify=metadata_test[stratification_strategy],
-            random_state=42
+            random_state=seed
         )
     except ValueError as e:
         metadata_val, metadata_test = train_test_split(
             metadata_test,
             test_size=0.4,
             shuffle=True,
-            random_state=42
+            random_state=seed
         )
 
     return metadata_train, metadata_test, metadata_val, images

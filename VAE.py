@@ -398,7 +398,7 @@ def train_VAE(model, train_loader, val_loader, optimizer, scheduler, resampler, 
     plt.plot(epochs, all_val_class_losses, label='Val Classification Loss', linestyle='--')
     plt.plot(epochs, all_val_recon_losses, label='Val Reconstruction Loss', linestyle='--')
     plt.plot(epochs, all_val_kl_losses, label='Val KL Divergence Loss', linestyle='--')
-    plt.xlim((0,2))
+    plt.ylim((0,2))
     
     plt.xlabel('Epochs')
     plt.ylabel('Loss')

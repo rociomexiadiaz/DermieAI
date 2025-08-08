@@ -15,6 +15,7 @@ clip_fe = False
 
 torch.cuda.empty_cache()
 torch.manual_seed(0)
+seed=42
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -45,31 +46,36 @@ dermie_metadata_train, dermie_metadata_test, dermie_metadata_val, images_dermie 
                                                                                                path_folder=r'Data/dermie_data', 
                                                                                                images_dir='master_data_june_7_2025.zip',
                                                                                                metadata_dir='master_data_june_7_2025.csv',
-                                                                                               stratification_strategy=stratification_strategy)
+                                                                                               stratification_strategy=stratification_strategy,
+                                                                                               seed=seed)
 
 pad_metadata_train, pad_metadata_test, pad_metadata_val, images_pad = load_dataset(project_dir=project_dir,
                                                                                    path_folder=r'Data/padufes', 
                                                                                    images_dir='padufes_images.zip',
                                                                                    metadata_dir='padufes_metadata_new.csv',
-                                                                                   stratification_strategy=stratification_strategy)
+                                                                                   stratification_strategy=stratification_strategy,
+                                                                                   seed=seed)
 
 scin_metadata_train, scin_metadata_test, scin_metadata_val, images_scin = load_dataset(project_dir=project_dir,
                                                                                        path_folder=r'Data/scin', 
                                                                                        images_dir='scin_images.zip',
                                                                                        metadata_dir='scin_metadata_new.csv',
-                                                                                       stratification_strategy=stratification_strategy)
+                                                                                       stratification_strategy=stratification_strategy,
+                                                                                       seed=seed)
 
 fitz17_metadata_train, fitz17_metadata_test, fitz17_metadata_val, images_fitz17 = load_dataset(project_dir=project_dir,
                                                                                        path_folder=r'Data/fitz17k', 
                                                                                        images_dir='fitzpatrick17k_images.zip',
                                                                                        metadata_dir='fitzpatrick17k_metadata_new.csv',
-                                                                                       stratification_strategy=stratification_strategy)
+                                                                                       stratification_strategy=stratification_strategy,
+                                                                                       seed=seed)
 
 india_metadata_train, india_metadata_test, india_metadata_val, images_india = load_dataset(project_dir=project_dir,
                                                                                        path_folder=r'Data/india_data', 
                                                                                        images_dir='india_images.zip',
                                                                                        metadata_dir='india_metadata_final.csv',
-                                                                                       stratification_strategy=stratification_strategy)
+                                                                                       stratification_strategy=stratification_strategy,
+                                                                                       seed=seed)
 
 experiment_data['Datasets'] = 'Dermie + Padufes + SCIN + Fitzpatrick17k + India'
 
@@ -94,13 +100,13 @@ transformations_val_test = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-#train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
-#val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-#test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([dermie_metadata_train, pad_metadata_train, scin_metadata_train, fitz17_metadata_train, india_metadata_train], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations) 
+val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
-train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations) 
-val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
-test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations) 
+#val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+#test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 # CLIP
 if clip_fe:
