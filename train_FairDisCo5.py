@@ -14,12 +14,12 @@ clip_fe = False
 
 torch.manual_seed(0)
 torch.cuda.empty_cache()
-seed=2
+seed=3
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-os.makedirs('Logs3', exist_ok=True)
-log_file = f"Logs3/dermie_experiment_{experiment_timestamp}.txt"
+os.makedirs('Logs6', exist_ok=True)
+log_file = f"Logs6/dermie_experiment_{experiment_timestamp}.txt"
 
 def save_experiment_log(data, file_path=log_file):
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -27,7 +27,7 @@ def save_experiment_log(data, file_path=log_file):
             f.write(f"{key}: {value}\n")
 
 def save_plot_and_return_path(fig, filename_base):
-    filename = f"Logs3/{filename_base}_{experiment_timestamp}.png"
+    filename = f"Logs6/{filename_base}_{experiment_timestamp}.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filename

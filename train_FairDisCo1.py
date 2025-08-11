@@ -18,8 +18,8 @@ seed=2
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-os.makedirs('Logs3', exist_ok=True)
-log_file = f"Logs3/dermie_experiment_{experiment_timestamp}.txt"
+os.makedirs('Logs2', exist_ok=True)
+log_file = f"Logs2/dermie_experiment_{experiment_timestamp}.txt"
 
 def save_experiment_log(data, file_path=log_file):
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -27,7 +27,7 @@ def save_experiment_log(data, file_path=log_file):
             f.write(f"{key}: {value}\n")
 
 def save_plot_and_return_path(fig, filename_base):
-    filename = f"Logs3/{filename_base}_{experiment_timestamp}.png"
+    filename = f"Logs2/{filename_base}_{experiment_timestamp}.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filename
@@ -106,8 +106,8 @@ transformations_val_test = transforms.Compose([
 #val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 #test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
-train_set = MultipleDatasets([fitz17_metadata_train, pad_metadata_train], [images_fitz17, images_pad], transform=transformations) 
-val_set = MultipleDatasets([fitz17_metadata_val, fitz17_metadata_test, pad_metadata_val, pad_metadata_test], [images_fitz17,images_fitz17, images_pad, images_pad], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
+train_set = MultipleDatasets([fitz17_metadata_train, scin_metadata_train], [images_fitz17, images_scin], transform=transformations) 
+val_set = MultipleDatasets([fitz17_metadata_val, fitz17_metadata_test, scin_metadata_val, scin_metadata_test], [images_fitz17, images_fitz17, images_scin, images_scin], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 test_set = MultipleDatasets([dermie_metadata_train, dermie_metadata_val, dermie_metadata_test], [images_dermie, images_dermie, images_dermie], transform=transformations_val_test, diagnostic_encoder=train_set.diagnose_encoder)
 
 # CLIP
@@ -116,8 +116,8 @@ if clip_fe:
     #val_set = MultipleDatasets([dermie_metadata_val, pad_metadata_val, scin_metadata_val, fitz17_metadata_val, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
     #test_set = MultipleDatasets([dermie_metadata_test, pad_metadata_test, scin_metadata_test, fitz17_metadata_test, india_metadata_val], [images_dermie, images_pad, images_scin, images_fitz17, images_india], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
-    train_set = MultipleDatasets([fitz17_metadata_train, pad_metadata_train],  [images_fitz17, images_pad], transform=transformations, clip=True, apply_augment=True) 
-    val_set = MultipleDatasets([fitz17_metadata_val, fitz17_metadata_test, pad_metadata_val, pad_metadata_test], [images_fitz17,images_fitz17, images_pad, images_pad], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    train_set = MultipleDatasets([fitz17_metadata_train, scin_metadata_train], [images_fitz17, images_scin], transform=transformations, clip=True, apply_augment=True) 
+    val_set = MultipleDatasets([fitz17_metadata_val, fitz17_metadata_test, scin_metadata_val, scin_metadata_test], [images_fitz17, images_fitz17, images_scin, images_scin], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
     test_set = MultipleDatasets([dermie_metadata_train, dermie_metadata_val, dermie_metadata_test], [images_dermie, images_dermie, images_dermie], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
 fig_train = visualise(train_set)

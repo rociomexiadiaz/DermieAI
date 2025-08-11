@@ -158,7 +158,11 @@ class MultipleDatasets(Dataset):
         if self.clip: 
             if self.apply_augment:
                 transformations = transforms.Compose([
-                        transforms.RandomAffine(degrees=10, shear= (-10,10,-10,10))])
+                        transforms.RandomAffine(degrees=30, shear= (-10,10,-10,10)), # 30 instead of 10                  
+                        transforms.ColorJitter(brightness=0.1), # NEW 
+                        transforms.RandomHorizontalFlip(p=0.5), # NEW
+                        transforms.RandomVerticalFlip(p=0.2)
+                ]) # NEW
                 image = transformations(image)
 
             image = self.lesion_clip_preprocess(image).unsqueeze(0).to(device)
@@ -240,19 +244,19 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
 
   
     ### Acne Eczema Psoriasis ###
-    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
+    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
 
     ### Eczema Psoriasis ###
     #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'eczema'])]
 
     ### Cancer vs Non-Cancer ###
-    #benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
-    #malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
+    benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
+    malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
 
-    #metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
-    #metadata['Diagnosis'] = metadata['Diagnosis'].apply(
-    #    lambda x: 'Benign' if x in benign_conditions else 'Malignant'
-    #)
+    metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
+    metadata['Diagnosis'] = metadata['Diagnosis'].apply(
+        lambda x: 'Benign' if x in benign_conditions else 'Malignant'
+    )
 
 
     if len(metadata) == 0:

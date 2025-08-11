@@ -1,10 +1,10 @@
 from zip_dataset import *
 import torchvision.transforms as transforms
 import torch
-from FairDisCo import *
-from TestFunction import *
+from torchvision import models
 from metricsFunctions import *
-import datetime
+from Baseline import *
+from TestFunction import *
 import matplotlib.pyplot as plt
 from xai import *
 
@@ -13,13 +13,12 @@ clip_fe = False
 ### SEEDS, DEVICE AND LOG FILE  ###
 
 torch.manual_seed(0)
-torch.cuda.empty_cache()
-seed=2
+seed = 3
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 experiment_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-os.makedirs('Logs3', exist_ok=True)
-log_file = f"Logs3/dermie_experiment_{experiment_timestamp}.txt"
+os.makedirs('Logs6', exist_ok=True)
+log_file = f"Logs6/dermie_experiment_{experiment_timestamp}.txt"
 
 def save_experiment_log(data, file_path=log_file):
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -27,7 +26,7 @@ def save_experiment_log(data, file_path=log_file):
             f.write(f"{key}: {value}\n")
 
 def save_plot_and_return_path(fig, filename_base):
-    filename = f"Logs3/{filename_base}_{experiment_timestamp}.png"
+    filename = f"Logs6/{filename_base}_{experiment_timestamp}.png"
     fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filename
@@ -35,6 +34,7 @@ def save_plot_and_return_path(fig, filename_base):
 experiment_data = {}
 experiment_data['Python Filename'] = os.path.basename(__file__)
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 ### LOAD DATA ###
 
@@ -84,7 +84,7 @@ transformations = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),  
     transforms.RandomAffine(degrees=30, shear= (-10,10,-10,10)), # 30 instead of 10
-    transforms.ColorJitter(brightness=0.1), # NEW
+    transforms.ColorJitter(brightness=0.1), # NEW 
     transforms.RandomHorizontalFlip(p=0.5), # NEW
     transforms.RandomVerticalFlip(p=0.2), # NEW
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -153,32 +153,57 @@ test_dataloader = torch.utils.data.DataLoader(
     num_workers=0
 )
 
+
 ### MODEL LOADING ###
+
+model = models.resnet152(weights='IMAGENET1K_V1')
+
+model.fc = torch.nn.Sequential(
+    #torch.nn.Dropout(0.1), # NEW 
+    torch.nn.Linear(model.fc.in_features, num_conditions),
+    
+)
+
+for name, param in model.named_parameters():
+    if 'layer4' in name or 'fc' in name:
+        param.requires_grad = True
+    else:
+        param.requires_grad = False
+
+
 class FC(nn.Module):
     def __init__(self, input_dim=768, output_dim=256):
         super(FC, self).__init__()
         self.fc = nn.Linear(input_dim, output_dim) 
         self.in_ch = input_dim
 
-    def forward(self, x):
-        if x.dim() == 3 and x.size(1) == 1:
-            x = x.squeeze(1)  
-        
+    def forward(self, x):       
         return self.fc(x) 
+  
 
-model = Network(output_size=[1,num_conditions])
-
-#CLIP
+# CLIP
 if clip_fe:
-    model = Network(output_size=[1,num_conditions], clip=FC())
+    model = FC(output_dim=num_conditions)
 
-model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
-loss_path = save_plot_and_return_path(fig, 'losses')
+### MODEL TRAINING AND TESTING ###
 
-model = nn.Sequential(
-    model.feature_extractor,
-    model.branch_1
+lr = 0.001
+num_epochs = 10
+optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+criterion = torch.nn.BCEWithLogitsLoss()
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+
+model, fig = train_model(
+    model,
+    train_dataloader,
+    val_dataloader,
+    optimizer=optimizer,
+    criterion=criterion,
+    scheduler=scheduler,
+    device=device,
+    num_epochs=num_epochs
 )
+loss_path = save_plot_and_return_path(fig, 'losses')
 
 if num_conditions > 5:
     metrics = test_model(
@@ -224,7 +249,7 @@ else:
 ### MODEL EXPLANATION ###
 
 if not clip_fe:
-    model_gradCAM = UniversalGrad(model, '0.layer4.2.conv3')
+    model_gradCAM = UniversalGrad(model, 'layer4.2.conv3')
     model_gradCAM.eval()
     heatmaps, images_for_grad_cam, predicted_labels, real_labels = gradCAM(model_gradCAM, test_dataloader, device)
     fig = visualize_gradcams_with_colorbars(images_for_grad_cam, heatmaps, predicted_labels, real_labels, conditions_mapping)
@@ -236,6 +261,4 @@ if not clip_fe:
 
 experiment_data['Train Dataset Visualisation'] = fig_train_path 
 experiment_data['Test Dataset Visualisation'] = fig_test_path 
-save_experiment_log(experiment_data, file_path=log_file)
-
-
+save_experiment_log(experiment_data, file_path=log_file)    
