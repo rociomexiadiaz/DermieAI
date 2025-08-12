@@ -8,7 +8,7 @@ import datetime
 import matplotlib.pyplot as plt
 from xai import *
 
-clip_fe = False
+clip_fe = True
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 

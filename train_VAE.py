@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from xai import *
 import datetime
 
-clip_fe = False
+clip_fe = True
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
@@ -120,7 +120,7 @@ if clip_fe:
 
     train_set = MultipleDatasets([fitz17_metadata_train], [images_fitz17], transform=transformations, clip=True, apply_augment=True) 
     val_set = MultipleDatasets([fitz17_metadata_val], [images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
-    test_set = MultipleDatasets([fitz17_metadata_test], [images_fitz17], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
+    test_set = MultipleDatasets([dermie_metadata_train, dermie_metadata_val, dermie_metadata_test], [images_dermie, images_dermie, images_dermie], transform=None, diagnostic_encoder=train_set.diagnose_encoder, clip=True, apply_augment=False)
 
 fig_train = visualise(train_set)
 fig_test = visualise(test_set)
