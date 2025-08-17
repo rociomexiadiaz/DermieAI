@@ -247,16 +247,16 @@ def load_dataset(project_dir, path_folder, images_dir, metadata_dir, stratificat
     #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'acne', 'eczema'])]
 
     ### Eczema Psoriasis ###
-    #metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'eczema'])]
+    metadata = metadata[metadata['Diagnosis'].isin(['psoriasis', 'eczema'])]
 
     ### Cancer vs Non-Cancer ###
-    benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
-    malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
+    #benign_conditions = ['benign', 'melanocytic nevus', 'cyst']
+    #malignant_conditions = ['malignant', 'melanoma', 'bcc', 'scc']
 
-    metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
-    metadata['Diagnosis'] = metadata['Diagnosis'].apply(
-        lambda x: 'Benign' if x in benign_conditions else 'Malignant'
-    )
+    #metadata = metadata[metadata['Diagnosis'].isin(benign_conditions + malignant_conditions)]
+    #metadata['Diagnosis'] = metadata['Diagnosis'].apply(
+    #    lambda x: 'Benign' if x in benign_conditions else 'Malignant'
+    #)
 
 
     if len(metadata) == 0:

@@ -7,7 +7,7 @@ from xai import *
 import open_clip
 from collections import defaultdict
 
-cancer = True
+cancer = False
 
 ### SEEDS, DEVICE AND LOG FILE  ###
 
@@ -75,27 +75,11 @@ else:
                 }
     
 
-# Global variables for the model
 lesion_model, _, lesion_preprocess = open_clip.create_model_and_transforms("hf-hub:yyupenn/whylesionclip")
 tokenizer = open_clip.get_tokenizer("ViT-L-14")
 
 def clip_predict(idx, dataset, text_prompts: list, random_crops=False, num_crops=5, model_name='LesionCLIP'):
-    """
-    Predict using CLIP model on a single image from the dataset.
-    
-    Args:
-        idx: Index of the image in the dataset
-        dataset: MultipleDatasets object
-        text_prompts: List of text prompts to compare against
-        random_crops: Whether to use random crops (not implemented)
-        num_crops: Number of crops to use (not implemented)
-        model_name: Model name (currently only supports 'LesionCLIP')
-    
-    Returns:
-        preds: Dictionary mapping text prompts to similarity scores
-        fst: FST value from the sample
-        condition: Actual condition/diagnosis from the dataset
-    """
+   
     global lesion_model, lesion_preprocess, tokenizer
 
     model, preprocess = lesion_model, lesion_preprocess
@@ -105,27 +89,19 @@ def clip_predict(idx, dataset, text_prompts: list, random_crops=False, num_crops
     sample = dataset[idx]  
     image = sample['image']
     fst = sample['fst'].item() 
-    
-    # Extract the actual condition from the dataset - prioritize 'condition' field as requested
     condition = sample.get('condition', sample.get('diagnosis', 'unknown'))
     
-    # Handle different data types for condition
     if hasattr(condition, 'item'):
         try:
-            # If it's a single-element tensor, extract the scalar
             if condition.numel() == 1:
                 condition = condition.item()
             else:
-                # If it's a multi-element tensor, take the first element
                 condition = condition[0].item() if hasattr(condition[0], 'item') else condition[0]
         except:
-            # If extraction fails, convert to string
             condition = str(condition)
     elif isinstance(condition, (list, tuple)):
-        # If it's a list or tuple, take the first element
         condition = condition[0] if len(condition) > 0 else 'unknown'
     
-    # Ensure condition is a string
     condition = str(condition)
     
     image_input = preprocess(image).unsqueeze(0).to(device)
@@ -147,19 +123,7 @@ def clip_predict(idx, dataset, text_prompts: list, random_crops=False, num_crops
 
 
 def stage_performance(preds: list, fst: list, conditions: list, stage_name: str, expected_correct: str = None) -> list[str]:
-    """
-    Calculate performance metrics for each classification stage.
-    
-    Args:
-        preds: List of prediction dictionaries
-        fst: List of FST values
-        conditions: List of actual conditions/diagnoses
-        stage_name: Name of the classification stage
-        expected_correct: For dermatology/lesion stages, what the correct answer should be
-        
-    Returns:
-        lines: List of formatted result strings
-    """
+   
     assert len(preds) == len(fst) == len(conditions), "Length of preds, fst, and conditions must match"
 
     predicted_labels = [max(p, key=p.get) for p in preds]
@@ -167,11 +131,9 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
     unique_labels = sorted(set(predicted_labels))
     unique_conditions = sorted(set(conditions))
 
-    # Initialize overall count dictionary
     all_counts = {label: 0 for label in unique_labels}
     all_counts["total"] = 0
     
-    # Accuracy tracking
     stage_accuracy = defaultdict(lambda: {'correct': 0, 'total': 0})
     overall_accuracy = {'correct': 0, 'total': 0}
 
@@ -180,8 +142,7 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
     lines.append(f"STAGE: {stage_name}")
     lines.append(f"{'='*60}")
 
-    # Calculate accuracy based on stage
-    if expected_correct:  # For dermatology/lesion detection stages
+    if expected_correct:  
         lines.append(f"\n=== {stage_name.upper()} DETECTION ACCURACY ===")
         lines.append(f"Expected correct answer: '{expected_correct}'")
         
@@ -189,30 +150,26 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
             fst_val = fst[i]
             is_correct = expected_correct.lower() in pred_label.lower()
             
-            # Update accuracy counters
             stage_accuracy[fst_val]['total'] += 1
             overall_accuracy['total'] += 1
             if is_correct:
                 stage_accuracy[fst_val]['correct'] += 1
                 overall_accuracy['correct'] += 1
     
-    else:  # For condition classification
+    else:  
         lines.append(f"\n=== {stage_name.upper()} CLASSIFICATION ACCURACY ===")
         
         for i, (pred_label, actual_condition) in enumerate(zip(predicted_labels, conditions)):
             fst_val = fst[i]
             is_correct = False
             
-            # Determine if prediction matches actual condition
             actual_condition_lower = str(actual_condition).lower()
             pred_label_lower = pred_label.lower()
             
             if 'malignant' in pred_label_lower:
-                # Map actual conditions to malignant
                 malignant_conditions = ['melanoma', 'scc', 'bcc', 'squamous cell carcinoma', 'basal cell carcinoma', 'malignant']
                 is_correct = any(mal_cond in actual_condition_lower for mal_cond in malignant_conditions)
             elif 'benign' in pred_label_lower:
-                # Map actual conditions to benign
                 benign_conditions = ['nevus', 'mole', 'benign', 'keratosis', 'seborrheic']
                 is_correct = any(ben_cond in actual_condition_lower for ben_cond in benign_conditions)
             elif 'eczema' in pred_label_lower:
@@ -220,29 +177,24 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
             elif 'psoriasis' in pred_label_lower:
                 is_correct = 'psoriasis' in actual_condition_lower
             else:
-                # Direct string matching for other conditions
                 is_correct = pred_label_lower in actual_condition_lower or actual_condition_lower in pred_label_lower
             
-            # Update accuracy counters
             stage_accuracy[fst_val]['total'] += 1
             overall_accuracy['total'] += 1
             if is_correct:
                 stage_accuracy[fst_val]['correct'] += 1
                 overall_accuracy['correct'] += 1
 
-    # Report accuracy by FST (skin tone)
     lines.append("\n--- Accuracy by Skin Tone (FST) ---")
     for fst_val in unique_fst:
         if stage_accuracy[fst_val]['total'] > 0:
             acc = 100 * stage_accuracy[fst_val]['correct'] / stage_accuracy[fst_val]['total']
             lines.append(f"FST {fst_val}: {acc:.1f}% ({stage_accuracy[fst_val]['correct']}/{stage_accuracy[fst_val]['total']})")
     
-    # Overall accuracy
     if overall_accuracy['total'] > 0:
         overall_acc = 100 * overall_accuracy['correct'] / overall_accuracy['total']
         lines.append(f"\nOverall Accuracy: {overall_acc:.1f}% ({overall_accuracy['correct']}/{overall_accuracy['total']})")
 
-    # CLIP prediction distribution by FST
     lines.append(f"\n=== {stage_name.upper()} PREDICTION DISTRIBUTION BY SKIN TONE ===")
     
     for tone in unique_fst:
@@ -263,13 +215,11 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
             pct = 100 * tone_counts[label] / total if total else 0
             lines.append(f"  {label}: {pct:.1f}% (N={tone_counts[label]})")
 
-    # Overall prediction distribution
     lines.append(f"\n=== OVERALL {stage_name.upper()} PREDICTION DISTRIBUTION ===")
     for label in unique_labels:
         pct = 100 * all_counts[label] / all_counts["total"] if all_counts["total"] else 0
         lines.append(f"{label}: {pct:.1f}% (N={all_counts[label]})")
 
-    # Show actual condition distribution (only for condition classification stage)
     if not expected_correct:
         lines.append(f"\n=== ACTUAL CONDITIONS IN DATASET ===")
         condition_counts = defaultdict(int)
@@ -281,7 +231,6 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
             pct = 100 * count / len(conditions)
             lines.append(f"  {condition}: {pct:.1f}% (N={count})")
         
-        # Condition distribution by FST
         lines.append("\nCondition distribution by skin tone:")
         for tone in unique_fst:
             tone_indices = [i for i, f in enumerate(fst) if f == tone]
@@ -299,7 +248,7 @@ def stage_performance(preds: list, fst: list, conditions: list, stage_name: str,
 
 ### EXPERIMENTS ###  
 
-with open("comprehensive_lesionclip_report.txt", "w") as f:    
+with open("cood_report.txt", "w") as f:    
 
     for dataset_name, dataset in datasets.items():
 
@@ -399,4 +348,4 @@ with open("comprehensive_lesionclip_report.txt", "w") as f:
         f.write(f"Processed for condition classification: {len(predictions_condition)}\n")
         f.write(f"{'='*80}\n\n")
 
-print("Comprehensive analysis complete. Results saved to 'comprehensive_lesionclip_report.txt'")
+print("Comprehensive analysis complete.'")
