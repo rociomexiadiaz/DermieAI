@@ -3,8 +3,6 @@ import torch
 from zip_dataset import *
 from torchvision.transforms import transforms
 from collections import defaultdict
-from collections import Counter
-
 
 # Load the model
 torch.manual_seed(0)
