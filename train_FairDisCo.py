@@ -156,13 +156,13 @@ class FC(nn.Module):
         
         return self.fc(x) 
 
-model = Network(output_size=[1,num_conditions])
+model = Network(output_size=[num_conditions,1])
 
 #CLIP
 if clip_fe:
-    model = Network(output_size=[1,num_conditions], clip=FC())
+    model = Network(output_size=[num_conditions,1], clip=FC())
 
-model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=30)
+model, fig = train_model(model, train_dataloader, val_dataloader, device, alpha=0.6, num_epochs=20)
 loss_path = save_plot_and_return_path(fig, 'losses')
 
 model = nn.Sequential(

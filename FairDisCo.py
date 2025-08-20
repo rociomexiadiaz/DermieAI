@@ -143,10 +143,10 @@ def train_epoch(model, dataloader, device,
 
         output = model(inputs)
 
-        loss0 = criterion[0](output[0], label_t) 
-        loss1 = criterion[1](output[1], label_c)  # branch 2 confusion loss
-        loss2 = criterion[2](output[2], label_c)  # branch 2 ce loss
-        loss3 = criterion[3](output[3], label_t)  # supervised contrastive loss
+        loss0 = criterion[0](output[0], label_c) 
+        loss1 = criterion[1](output[1], label_t)  # branch 2 confusion loss
+        loss2 = criterion[2](output[2], label_t)  # branch 2 ce loss
+        loss3 = criterion[3](output[3], label_c)  # supervised contrastive loss
         loss = loss0+loss1*alpha+loss2+loss3*beta
 
         loss.backward()
@@ -176,10 +176,10 @@ def val_epoch(model, dataloader, device, criterion, alpha=1.0, beta=0.8):
 
             output = model(inputs)
 
-            loss0 = criterion[0](output[0], label_t) 
-            loss1 = criterion[1](output[1], label_c)  # branch 2 confusion loss
-            loss2 = criterion[2](output[2], label_c)  # branch 2 ce loss
-            loss3 = criterion[3](output[3], label_t)  # supervised contrastive loss
+            loss0 = criterion[0](output[0], label_c) 
+            loss1 = criterion[1](output[1], label_t)  # branch 2 confusion loss
+            loss2 = criterion[2](output[2], label_t)  # branch 2 ce loss
+            loss3 = criterion[3](output[3], label_c)  # supervised contrastive loss
             loss = loss0 + loss1 * alpha + loss2 + loss3 * beta
 
 
@@ -202,9 +202,9 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs=10,
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
     if criterion is None:
         criterion = [
-            nn.MSELoss(),
-            Confusion_Loss(),
             nn.CrossEntropyLoss(),
+            Confusion_Loss(),
+            nn.MSELoss(),
             Supervised_Contrastive_Loss(device=device)
         ]
 
