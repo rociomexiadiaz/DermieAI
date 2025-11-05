@@ -53,43 +53,17 @@ The following datasets were used in this study, the metadata for the publicly av
 - Fitzpatrick17k
 - PADUFES
 - SCIN
-- Dermie: Private dataset used for external validation 
 
 ## Experimental Design
 - In-domain: train and testing on Fitzpatrick17k dataset
-- Generalisation: testing on Dermie, training on the following dataset combinations
-   - Fitzpatrick17k
-   - Dataset Augmentations: Fitzpatrick17k + PADUFES, Fitzpatrick17k + SCIN, Fitzpatrick17k + PADFUES + SCIN
-   
-## Key Findings
+- Generalisation: train on Fitzpatrick17k, test on external datasets
+  
+## Results: LesionTABE overall best
+- LesionTABE achieved the best overall trade-off between balanced accuracy and fairness for both cancer and inflammatory condition detection
 
-### FairDisCo Superior In-Domain Performance
 
-#### Cancer Detection (Fitzpatrick17k)
-| Metric | FairDisCo | Baseline |
-|--------|-----------|----------|
-| **Balanced Accuracy** | **84.6 ± 2.3%** | 82.4 ± 0.8% |
-| **EOM Fairness Score** | **0.814** | 0.773 |
-| **PQD Score** | **0.871** | 0.833 |
 
-#### Eczema/Psoriasis Classification (Fitzpatrick17k)
-| Metric | FairDisCo | Baseline | 
-|--------|-----------|----------|
-| **Balanced Accuracy** | **81.6 ± 2.1%** | 77.7 ± 4.2% | 
-| **EOM Performance** | 0.640 | 0.530 |
 
-### FairDisCo Superior Generalisation without Dataset Augmentation
-
-- **Cancer Detection**: Achieved **64.6%** balanced accuracy on external test set, being the only architecture to outperform baseline (63.3%) without augmentation
-- **Eczema/Psoriasis**: Demonstrated highest generalization performance before dataset augmentation
-
-### Optimal Performance-Fairness Trade-offs
-
-- **Cancer Detection**: VAE with Fitzpatrick17k + PADFUES + SCIN
-- **Eczema/Psoriasis**: FairDisCo with Fitpatrick17k
-
-### LesionCLIP Foundation Model Benefits
-- Improved generalisation performance accuracy in cancer detection
 
 ## Citation
 
