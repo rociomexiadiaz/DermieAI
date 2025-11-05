@@ -59,9 +59,12 @@ The following datasets were used in this study, the metadata for the publicly av
 - Generalisation: train on Fitzpatrick17k, test on external datasets
   
 ## Results: LesionTABE overall best
-- LesionTABE achieved the best overall trade-off between balanced accuracy and fairness for both cancer and inflammatory condition detection
+- LesionTABE achieved the best overall trade-off between balanced accuracy and fairness for both cancer and inflammatory condition detection: (Left) EOM vs Balanced Accuracy for Cancer detection       (Right) PQD vs Balanced Accuracy for Inflammatory conditions
 
-
+<p align="center">
+  <img src="images/eom_cancer_vs_noncancer.png" width="45%" alt="Image 1" />
+  <img src="images/pqd_eczema_vs_psoriasis.png" width="45%" alt="Image 2" />
+</p>
 
 
 
